@@ -151,7 +151,7 @@ export default function SupportPage() {
             {view === 'form' ? (
                 <Card className="border-none shadow-xl shadow-gray-200/50">
                     <CardHeader className="bg-slate-50 border-b rounded-t-xl py-6">
-                        <CardTitle className="text-xl">フォーム Hỗ trợ</CardTitle>
+                        <CardTitle className="text-xl"> Hỗ trợ</CardTitle>
                         <CardDescription>
                             Vui lòng điền đầy đủ thông tin bên dưới, chúng tôi sẽ phản hồi sớm nhất có thể.
                         </CardDescription>

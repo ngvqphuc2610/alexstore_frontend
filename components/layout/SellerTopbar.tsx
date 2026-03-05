@@ -52,7 +52,7 @@ export function SellerTopbar() {
                         </DropdownMenuLabel>
                         <DropdownMenuSeparator className="bg-emerald-50" />
                         <DropdownMenuItem asChild className="focus:bg-emerald-50 focus:text-emerald-700">
-                            <a href="/profile" className="flex items-center cursor-pointer">
+                            <a href="/seller/profile" className="flex items-center cursor-pointer">
                                 <UserIcon className="mr-2 h-4 w-4" />
                                 <span>Hồ sơ cá nhân</span>
                             </a>

@@ -10,18 +10,12 @@ import {
     Edit,
     Trash2,
     Eye,
-    ChevronLeft,
-    ChevronRight,
     Loader2,
     Image as ImageIcon,
-    CheckCircle2,
-    AlertCircle,
-    Clock,
-    XCircle
 } from 'lucide-react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { useAuthStore } from '@/stores/authStore';
-import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
+import { Card, CardContent, CardHeader } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Badge } from '@/components/ui/badge';
@@ -43,11 +37,15 @@ import {
     TableHeader,
     TableRow,
 } from '@/components/ui/table';
+import { AddProductDialog } from '@/components/seller/AddProductDialog';
+import { EditProductDialog } from '@/components/seller/EditProductDialog';
 
 export default function SellerProductsPage() {
     const { user } = useAuthStore();
     const queryClient = useQueryClient();
     const [searchTerm, setSearchTerm] = useState('');
+    const [isAddOpen, setIsAddOpen] = useState(false);
+    const [editProduct, setEditProduct] = useState<any>(null);
 
     const { data: productsData, isLoading } = useQuery({
         queryKey: ['seller-products', user?.id],
@@ -89,9 +87,11 @@ export default function SellerProductsPage() {
         }
     };
 
-    const filteredProducts = productsData?.data?.filter((p: any) =>
+    const products = productsData?.data ?? productsData ?? [];
+    const productsList = Array.isArray(products) ? products : (products as any)?.data ?? [];
+    const filteredProducts = productsList.filter((p: any) =>
         p.name.toLowerCase().includes(searchTerm.toLowerCase())
-    ) || [];
+    );
 
     return (
         <div className="space-y-6">
@@ -100,7 +100,10 @@ export default function SellerProductsPage() {
                     <h1 className="text-2xl font-bold text-gray-900">Sản phẩm của tôi</h1>
                     <p className="text-gray-500 text-sm">Quản lý và cập nhật danh sách sản phẩm của gian hàng.</p>
                 </div>
-                <Button className="bg-emerald-600 hover:bg-emerald-700 text-white">
+                <Button
+                    className="bg-emerald-600 hover:bg-emerald-700 text-white"
+                    onClick={() => setIsAddOpen(true)}
+                >
                     <Plus className="h-4 w-4 mr-2" />
                     Thêm sản phẩm mới
                 </Button>
@@ -141,7 +144,10 @@ export default function SellerProductsPage() {
                                 {searchTerm ? 'Thử tìm kiếm với từ khóa khác.' : 'Bắt đầu bán hàng bằng cách thêm sản phẩm đầu tiên.'}
                             </p>
                             {!searchTerm && (
-                                <Button className="mt-6 bg-emerald-600 hover:bg-emerald-700">
+                                <Button
+                                    className="mt-6 bg-emerald-600 hover:bg-emerald-700"
+                                    onClick={() => setIsAddOpen(true)}
+                                >
                                     Thêm sản phẩm
                                 </Button>
                             )}
@@ -152,7 +158,7 @@ export default function SellerProductsPage() {
                                 <TableHeader className="bg-gray-50/50">
                                     <TableRow>
                                         <TableHead className="w-16">Ảnh</TableHead>
-                                        <TableHead>Tên sản Parliament</TableHead>
+                                        <TableHead>Tên sản phẩm</TableHead>
                                         <TableHead>Trạng thái</TableHead>
                                         <TableHead>Giá bán</TableHead>
                                         <TableHead>Kho</TableHead>
@@ -198,11 +204,11 @@ export default function SellerProductsPage() {
                                                     </DropdownMenuTrigger>
                                                     <DropdownMenuContent align="end" className="w-40">
                                                         <DropdownMenuLabel>Thao tác</DropdownMenuLabel>
-                                                        <DropdownMenuItem className="cursor-pointer">
+                                                        <DropdownMenuItem
+                                                            className="cursor-pointer"
+                                                            onClick={() => setEditProduct(p)}
+                                                        >
                                                             <Edit className="mr-2 h-4 w-4" /> Sửa thông tin
-                                                        </DropdownMenuItem>
-                                                        <DropdownMenuItem className="cursor-pointer">
-                                                            <Eye className="mr-2 h-4 w-4" /> Xem chi tiết
                                                         </DropdownMenuItem>
                                                         <DropdownMenuSeparator />
                                                         <DropdownMenuItem
@@ -226,6 +232,16 @@ export default function SellerProductsPage() {
                     )}
                 </CardContent>
             </Card>
+
+            {/* Dialogs */}
+            <AddProductDialog open={isAddOpen} onOpenChange={setIsAddOpen} />
+            {editProduct && (
+                <EditProductDialog
+                    open={!!editProduct}
+                    onOpenChange={(open) => { if (!open) setEditProduct(null); }}
+                    product={editProduct}
+                />
+            )}
         </div>
     );
 }

@@ -28,7 +28,7 @@ const navItems = [
     { href: '/seller/dashboard', label: 'Tổng quan', icon: LayoutDashboard },
     { href: '/seller/products', label: 'Sản phẩm của tôi', icon: Package },
     { href: '/seller/orders', label: 'Đơn hàng', icon: ShoppingCart },
-    { href: '/support', label: 'Hỗ trợ admin', icon: LifeBuoy },
+    { href: '/seller/support', label: 'Hỗ trợ admin', icon: LifeBuoy },
 ];
 
 const bottomItems = [
