@@ -43,7 +43,7 @@ export interface ProductFilters {
     page?: number;
     limit?: number;
     search?: string;
-    status?: ProductStatus;
+    status?: ProductStatus | 'all';
     categoryId?: number;
     sellerId?: string;
     sortBy?: string;

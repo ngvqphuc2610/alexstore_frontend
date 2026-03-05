@@ -36,11 +36,12 @@ import {
     DialogTitle,
 } from '@/components/ui/dialog';
 import { formatDate } from '@/lib/constants';
+import { CopyableId } from '@/components/shared/CopyableId';
 
 // ─── Mock Data (1-2 items for testing) ────────────────────────────────────────
 const mockReviews = [
-    { id: 1, productName: 'iPhone 16 Pro Max 256GB', buyer: 'Nguyễn Văn A', rating: 5, comment: 'Sản phẩm rất tốt, giao hàng nhanh!', createdAt: '2026-03-01T10:00:00Z' },
-    { id: 2, productName: 'Samsung Galaxy S25 Ultra', buyer: 'Trần Thị B', rating: 3, comment: 'Tạm ổn, pin hơi yếu.', createdAt: '2026-03-02T14:00:00Z' },
+    { id: '018e698b-e123-7123-9a8b-fedcba987654', productName: 'iPhone 16 Pro Max 256GB', buyer: 'Nguyễn Văn A', rating: 5, comment: 'Sản phẩm rất tốt, giao hàng nhanh!', createdAt: '2026-03-01T10:00:00Z' },
+    { id: '018e698b-e456-7a1b-9cde-fedcba987654', productName: 'Samsung Galaxy S25 Ultra', buyer: 'Trần Thị B', rating: 3, comment: 'Tạm ổn, pin hơi yếu.', createdAt: '2026-03-02T14:00:00Z' },
 ];
 
 export default function AdminReviewsPage() {
@@ -48,7 +49,9 @@ export default function AdminReviewsPage() {
     const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
     const [selectedReview, setSelectedReview] = useState<typeof mockReviews[0] | null>(null);
 
-    const filteredReviews = mockReviews.filter((review) =>
+    const sortedReviews = [...mockReviews].sort((a, b) => a.id.localeCompare(b.id));
+
+    const filteredReviews = sortedReviews.filter((review) =>
         review.productName.toLowerCase().includes(search.toLowerCase()) ||
         review.buyer.toLowerCase().includes(search.toLowerCase())
     );
@@ -109,6 +112,8 @@ export default function AdminReviewsPage() {
                     <Table>
                         <TableHeader>
                             <TableRow>
+                                <TableHead className="w-[50px]">#</TableHead>
+                                <TableHead className="w-[120px]">ID</TableHead>
                                 <TableHead>Sản phẩm</TableHead>
                                 <TableHead>Người mua</TableHead>
                                 <TableHead>Đánh giá</TableHead>
@@ -118,8 +123,14 @@ export default function AdminReviewsPage() {
                             </TableRow>
                         </TableHeader>
                         <TableBody>
-                            {filteredReviews.map((review) => (
+                            {filteredReviews.map((review, index) => (
                                 <TableRow key={review.id} className="hover:bg-muted/50">
+                                    <TableCell className="font-medium text-muted-foreground">
+                                        #{index + 1}
+                                    </TableCell>
+                                    <TableCell>
+                                        <CopyableId id={review.id} />
+                                    </TableCell>
                                     <TableCell className="font-medium">{review.productName}</TableCell>
                                     <TableCell className="text-muted-foreground">{review.buyer}</TableCell>
                                     <TableCell>{renderStars(review.rating)}</TableCell>

@@ -47,11 +47,12 @@ import { Label } from '@/components/ui/label';
 import { StatusBadge } from '@/components/shared/StatusBadge';
 import { ORDER_STATUS_CONFIG, PAYMENT_STATUS_CONFIG, formatCurrency, formatDate } from '@/lib/constants';
 import type { OrderStatus, PaymentStatus } from '@/types';
+import { CopyableId } from '@/components/shared/CopyableId';
 
 // ─── Mock Data (1-2 items for testing) ────────────────────────────────────────
 const mockOrders = [
     {
-        id: '1',
+        id: '018e698b-24b5-7123-9a8b-fedcba987654',
         orderCode: 'ORD-2026-001',
         buyer: 'Nguyễn Văn A',
         buyerEmail: 'a@email.com',
@@ -66,7 +67,7 @@ const mockOrders = [
         ],
     },
     {
-        id: '2',
+        id: '018e698b-3cde-7517-8e6f-7c1573980f91',
         orderCode: 'ORD-2026-002',
         buyer: 'Trần Thị B',
         buyerEmail: 'b@email.com',
@@ -90,7 +91,9 @@ export default function AdminOrdersPage() {
     const [updateDialogOpen, setUpdateDialogOpen] = useState(false);
     const [selectedOrder, setSelectedOrder] = useState<typeof mockOrders[0] | null>(null);
 
-    const filteredOrders = mockOrders.filter((order) => {
+    const sortedOrders = [...mockOrders].sort((a, b) => a.id.localeCompare(b.id));
+
+    const filteredOrders = sortedOrders.filter((order) => {
         const matchesSearch =
             order.orderCode.toLowerCase().includes(search.toLowerCase()) ||
             order.buyer.toLowerCase().includes(search.toLowerCase());
@@ -146,6 +149,8 @@ export default function AdminOrdersPage() {
                     <Table>
                         <TableHeader>
                             <TableRow>
+                                <TableHead className="w-[50px]">#</TableHead>
+                                <TableHead>ID</TableHead>
                                 <TableHead>Mã đơn</TableHead>
                                 <TableHead>Người mua</TableHead>
                                 <TableHead>Tổng tiền</TableHead>
@@ -157,8 +162,14 @@ export default function AdminOrdersPage() {
                             </TableRow>
                         </TableHeader>
                         <TableBody>
-                            {filteredOrders.map((order) => (
+                            {filteredOrders.map((order, index) => (
                                 <TableRow key={order.id} className="hover:bg-muted/50">
+                                    <TableCell className="font-medium text-muted-foreground">
+                                        #{index + 1}
+                                    </TableCell>
+                                    <TableCell>
+                                        <CopyableId id={order.id} />
+                                    </TableCell>
                                     <TableCell className="font-medium text-indigo-600">{order.orderCode}</TableCell>
                                     <TableCell>
                                         <div>

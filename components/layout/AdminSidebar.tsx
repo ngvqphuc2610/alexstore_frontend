@@ -14,6 +14,7 @@ import {
     ChevronLeft,
     ChevronRight,
     ShieldCheck,
+    LifeBuoy,
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { useUIStore } from '@/stores/uiStore';
@@ -33,6 +34,7 @@ const navItems = [
     { href: '/admin/categories', label: 'Danh mục', icon: FolderTree },
     { href: '/admin/orders', label: 'Đơn hàng', icon: ShoppingCart },
     { href: '/admin/reviews', label: 'Đánh giá', icon: Star },
+    { href: '/admin/support', label: 'Hỗ trợ & Khiếu nại', icon: LifeBuoy },
 ];
 
 const bottomItems = [

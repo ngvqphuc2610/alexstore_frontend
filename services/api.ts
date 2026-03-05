@@ -7,14 +7,17 @@ import axios from 'axios';
  */
 const api = axios.create({
     baseURL: '/api/proxy',
-    headers: {
-        'Content-Type': 'application/json',
-    },
 });
 
-// Response interceptor: handle errors
+// Response interceptor: handle errors and unwrap success responses
 api.interceptors.response.use(
-    (response) => response.data,
+    (response) => {
+        // Automatically unwrap backend's ApiResponse format { success: true, data: T }
+        if (response.data && response.data.success === true && 'data' in response.data) {
+            return response.data.data;
+        }
+        return response.data;
+    },
     (error) => {
         if (error.response?.status === 401) {
             if (typeof window !== 'undefined') {

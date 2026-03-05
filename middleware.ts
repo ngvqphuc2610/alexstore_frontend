@@ -2,7 +2,6 @@ import { NextRequest, NextResponse } from 'next/server';
 import { jwtVerify } from 'jose';
 
 const TOKEN_COOKIE = 'alexstore_token';
-const JWT_SECRET = new TextEncoder().encode(process.env.JWT_SECRET);
 
 // ─── JWT Payload type (matches backend) ──────────────────────────────────────
 interface JwtPayload {
@@ -30,15 +29,19 @@ const ROLE_DASHBOARDS: Record<string, string> = {
     BUYER: '/',
 };
 
-/**
- * Verify JWT token and extract payload using jose.
- * Returns null if token is invalid or expired.
- */
 async function verifyToken(token: string): Promise<JwtPayload | null> {
     try {
-        const { payload } = await jwtVerify(token, JWT_SECRET);
+        const secretStr = process.env.JWT_SECRET;
+        if (!secretStr) {
+            console.error('JWT_SECRET is not defined in middleware');
+            return null;
+        }
+
+        const secret = new TextEncoder().encode(secretStr.replace(/"/g, '').trim());
+        const { payload } = await jwtVerify(token, secret);
         return payload as unknown as JwtPayload;
-    } catch {
+    } catch (error) {
+        console.error('JWT verification failed in middleware:', error);
         return null;
     }
 }

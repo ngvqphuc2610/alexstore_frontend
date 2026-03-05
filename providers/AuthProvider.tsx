@@ -8,11 +8,14 @@ import { useAuthStore } from '@/stores/authStore';
  * Wrap this around layouts that need auth.
  */
 export function AuthProvider({ children }: { children: ReactNode }) {
-    const checkAuth = useAuthStore((s) => s.checkAuth);
+    const { checkAuth, isInitialized, isLoading } = useAuthStore();
 
     useEffect(() => {
-        checkAuth();
-    }, [checkAuth]);
+        if (!isInitialized && !isLoading) {
+            checkAuth();
+        }
+    }, [checkAuth, isInitialized, isLoading]);
+    
 
     return <>{children}</>;
 }

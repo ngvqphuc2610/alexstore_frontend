@@ -12,6 +12,7 @@ interface AuthState {
     user: User | null;
     isAuthenticated: boolean;
     isLoading: boolean;
+    isInitialized: boolean;
 
     /** Set user in memory after auth check */
     setUser: (user: User) => void;
@@ -28,6 +29,9 @@ interface AuthState {
     /** Logout → clears cookies, clears user */
     logout: () => Promise<void>;
 
+    /** Register → calls backend, optionally returns redirect URL or user data */
+    register: (data: any) => Promise<void>;
+
     /** Get the dashboard URL for the current user's role */
     getDashboardUrl: () => string;
 }
@@ -35,26 +39,33 @@ interface AuthState {
 export const useAuthStore = create<AuthState>()((set, get) => ({
     user: null,
     isAuthenticated: false,
-    isLoading: true,
+    isLoading: false,
+    isInitialized: false,
 
     setUser: (user: User) =>
-        set({ user, isAuthenticated: true, isLoading: false }),
+        set({ user, isAuthenticated: true, isLoading: false, isInitialized: true }),
 
     clearUser: () =>
-        set({ user: null, isAuthenticated: false, isLoading: false }),
+        set({ user: null, isAuthenticated: false, isLoading: false, isInitialized: true }),
 
     checkAuth: async () => {
+        const { isInitialized, isAuthenticated, user } = get();
+        if (isInitialized || (isAuthenticated && user)) {
+            set({ isLoading: false });
+            return;
+        }
+
         try {
             set({ isLoading: true });
             const res = await fetch('/api/auth/me');
             if (res.ok) {
                 const data = await res.json();
-                set({ user: data.user, isAuthenticated: true, isLoading: false });
+                set({ user: data.user, isAuthenticated: true, isLoading: false, isInitialized: true });
             } else {
-                set({ user: null, isAuthenticated: false, isLoading: false });
+                set({ user: null, isAuthenticated: false, isLoading: false, isInitialized: true });
             }
         } catch {
-            set({ user: null, isAuthenticated: false, isLoading: false });
+            set({ user: null, isAuthenticated: false, isLoading: false, isInitialized: true });
         }
     },
 
@@ -72,7 +83,7 @@ export const useAuthStore = create<AuthState>()((set, get) => ({
 
         const data = await res.json();
         const user = data.user;
-        set({ user, isAuthenticated: true, isLoading: false });
+        set({ user, isAuthenticated: true, isLoading: false, isInitialized: true });
 
         // Return the dashboard URL for the user's role
         return ROLE_DASHBOARDS[user.role] || '/';
@@ -80,7 +91,26 @@ export const useAuthStore = create<AuthState>()((set, get) => ({
 
     logout: async () => {
         await fetch('/api/auth/logout', { method: 'POST' });
-        set({ user: null, isAuthenticated: false, isLoading: false });
+        set({ user: null, isAuthenticated: false, isLoading: false, isInitialized: true });
+    },
+
+    register: async (data: any) => {
+        const res = await fetch('/api/auth/register', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify(data),
+        });
+
+        if (!res.ok) {
+            const error = await res.json();
+            throw new Error(error.message || 'Đăng ký thất bại');
+        }
+
+        const result = await res.json();
+        // Optionally auto-login if backend returns user/token
+        if (result.user) {
+            set({ user: result.user, isAuthenticated: true, isLoading: false, isInitialized: true });
+        }
     },
 
     getDashboardUrl: () => {
