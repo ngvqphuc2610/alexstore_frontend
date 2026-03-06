@@ -12,6 +12,7 @@ import {
     ArrowUpRight,
     ArrowDownRight,
     Eye,
+    ShieldCheck,
 } from 'lucide-react';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
@@ -92,56 +93,166 @@ const recentUsers = [
 ];
 
 
+import { useQuery } from '@tanstack/react-query';
+import { adminAnalyticsService } from '@/services/admin-analytics.service';
+import {
+    ResponsiveContainer,
+    LineChart,
+    Line,
+    XAxis,
+    YAxis,
+    CartesianGrid,
+    Tooltip as RechartsTooltip,
+    Legend,
+    PieChart,
+    Pie,
+    Cell
+} from 'recharts';
+import { Loader2 } from 'lucide-react';
+
+const COLORS = ['#F59E0B', '#3B82F6', '#8B5CF6', '#10B981', '#EF4444'];
+const STATUS_LABELS: Record<string, string> = {
+    'PENDING': 'Chờ xử lý',
+    'PAID': 'Đã thanh toán',
+    'SHIPPING': 'Đang giao',
+    'DELIVERED': 'Đã giao',
+    'CANCELLED': 'Đã hủy'
+};
+
 // ─── Dashboard Page ───────────────────────────────────────────────────────────
 export default function AdminDashboardPage() {
+    const { data: overview, isLoading: isLoadingOverview } = useQuery({
+        queryKey: ['admin-overview'],
+        queryFn: () => adminAnalyticsService.getOverview()
+    });
+
+    const { data: revenueData, isLoading: isLoadingRevenue } = useQuery({
+        queryKey: ['admin-revenue-trend'],
+        queryFn: () => adminAnalyticsService.getRevenueAnalytics('30d')
+    });
+
+    const { data: ordersData, isLoading: isLoadingOrders } = useQuery({
+        queryKey: ['admin-orders-distribution'],
+        queryFn: () => adminAnalyticsService.getOrdersAnalytics('30d')
+    });
+
+    if (isLoadingOverview || isLoadingRevenue || isLoadingOrders) {
+        return (
+            <div className="flex h-[60vh] items-center justify-center">
+                <Loader2 className="h-8 w-8 animate-spin text-indigo-600" />
+            </div>
+        );
+    }
+
+    const orderDistribution = ordersData ? [
+        { status: 'DELIVERED', count: ordersData.completedOrders || 0 },
+        { status: 'CANCELLED', count: ordersData.cancelledOrders || 0 },
+        { status: 'PENDING', count: Math.max(0, (ordersData.totalOrders || 0) - ((ordersData.completedOrders || 0) + (ordersData.cancelledOrders || 0))) }
+    ].filter((i: any) => i.count > 0) : [];
+
     return (
-        <div className="space-y-6">
+        <div className="space-y-6 pb-12">
             {/* Page header */}
             <div>
-                <h1 className="text-3xl font-bold tracking-tight">Dashboard</h1>
+                <h1 className="text-3xl font-bold tracking-tight">Tổng quan hệ thống</h1>
                 <p className="text-muted-foreground mt-1">
-                    Tổng quan hoạt động của hệ thống AlexStore
+                    Báo cáo số liệu toàn diện của AlexStore trong 30 ngày qua.
                 </p>
             </div>
 
             {/* Stat Cards */}
             <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
                 <StatCard
-                    title="Tổng người dùng"
-                    value="2,847"
-                    description="so với tháng trước"
+                    title="Tổng Người dùng"
+                    value={overview?.totalUsers?.toLocaleString() || 0}
+                    description="Thành viên mua hàng"
                     icon={Users}
-                    trend={{ value: 12.5, isPositive: true }}
                     iconColor="text-blue-600"
                     iconBg="bg-blue-100 dark:bg-blue-900/30"
                 />
                 <StatCard
-                    title="Tổng sản phẩm"
-                    value="1,234"
-                    description="sản phẩm đang hoạt động"
-                    icon={Package}
-                    trend={{ value: 8.2, isPositive: true }}
+                    title="Tổng Người bán"
+                    value={overview?.totalSellers?.toLocaleString() || 0}
+                    description="Đối tác bán hàng"
+                    icon={ShieldCheck}
+                    iconColor="text-amber-600"
+                    iconBg="bg-amber-100 dark:bg-amber-900/30"
+                />
+                <StatCard
+                    title="Tổng Đơn hàng"
+                    value={overview?.totalOrders?.toLocaleString() || 0}
+                    description="Tổng lượng giao dịch"
+                    icon={ShoppingCart}
+                    iconColor="text-indigo-600"
+                    iconBg="bg-indigo-100 dark:bg-indigo-900/30"
+                />
+                <StatCard
+                    title="Doanh thu (GMV)"
+                    value={formatCurrency(overview?.totalRevenue || 0)}
+                    description="Tổng giá trị hàng hóa"
+                    icon={DollarSign}
                     iconColor="text-emerald-600"
                     iconBg="bg-emerald-100 dark:bg-emerald-900/30"
                 />
-                <StatCard
-                    title="Tổng đơn hàng"
-                    value="856"
-                    description="đơn hàng trong tháng"
-                    icon={ShoppingCart}
-                    trend={{ value: 3.1, isPositive: false }}
-                    iconColor="text-orange-600"
-                    iconBg="bg-orange-100 dark:bg-orange-900/30"
-                />
-                <StatCard
-                    title="Doanh thu"
-                    value={formatCurrency(1250000000)}
-                    description="tổng doanh thu tháng này"
-                    icon={DollarSign}
-                    trend={{ value: 18.7, isPositive: true }}
-                    iconColor="text-violet-600"
-                    iconBg="bg-violet-100 dark:bg-violet-900/30"
-                />
+            </div>
+
+            {/* Charts Section */}
+            <div className="grid gap-6 lg:grid-cols-3">
+                <Card className="lg:col-span-2 border-0 shadow-sm">
+                    <CardHeader>
+                        <CardTitle className="text-lg">Xu hướng Doanh thu</CardTitle>
+                        <CardDescription>Biểu đồ doanh thu hàng ngày theo hệ thống</CardDescription>
+                    </CardHeader>
+                    <CardContent>
+                        <div className="h-[300px] w-full mt-4">
+                            <ResponsiveContainer width="100%" height="100%">
+                                <LineChart data={revenueData?.revenueByDate}>
+                                    <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#E2E8F0" />
+                                    <XAxis dataKey="date" tick={{ fontSize: 12 }} axisLine={false} tickLine={false} />
+                                    <YAxis tick={{ fontSize: 12 }} axisLine={false} tickLine={false} tickFormatter={(val) => `${(val / 1000000).toFixed(0)}M`} />
+                                    <RechartsTooltip
+                                        contentStyle={{ borderRadius: '8px', border: 'none', boxShadow: '0 4px 6px -1px rgb(0 0 0 / 0.1)' }}
+                                        formatter={(val: any) => [formatCurrency(val), 'Doanh thu']}
+                                    />
+                                    <Line type="monotone" dataKey="revenue" stroke="#4F46E5" strokeWidth={3} dot={false} activeDot={{ r: 6 }} />
+                                </LineChart>
+                            </ResponsiveContainer>
+                        </div>
+                    </CardContent>
+                </Card>
+
+                <Card className="border-0 shadow-sm">
+                    <CardHeader>
+                        <CardTitle className="text-lg">Trạng thái Đơn hàng</CardTitle>
+                        <CardDescription>Phân bổ theo trạng thái hiện tại</CardDescription>
+                    </CardHeader>
+                    <CardContent>
+                        <div className="h-[300px] w-full mt-4">
+                            <ResponsiveContainer width="100%" height="100%">
+                                <PieChart>
+                                    <Pie
+                                        data={orderDistribution}
+                                        cx="50%"
+                                        cy="50%"
+                                        innerRadius={60}
+                                        outerRadius={80}
+                                        paddingAngle={5}
+                                        dataKey="count"
+                                        nameKey="status"
+                                    >
+                                        {orderDistribution.map((entry: any, index: number) => (
+                                            <Cell key={`cell-${index}`} fill={COLORS[index % COLORS.length]} />
+                                        ))}
+                                    </Pie>
+                                    <RechartsTooltip
+                                        formatter={(val: any, name: any) => [val, STATUS_LABELS[name] || name]}
+                                    />
+                                    <Legend formatter={(value) => STATUS_LABELS[value] || value} />
+                                </PieChart>
+                            </ResponsiveContainer>
+                        </div>
+                    </CardContent>
+                </Card>
             </div>
 
             {/* Content Grid */}

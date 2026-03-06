@@ -5,3 +5,4 @@ export * from './order.types';
 export * from './review.types';
 export * from './common.types';
 export * from './cart.types';
+export * from './analytics.types';

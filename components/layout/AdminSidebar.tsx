@@ -15,7 +15,30 @@ import {
     ChevronRight,
     ShieldCheck,
     LifeBuoy,
+    TrendingUp,
+    BarChart3,
+    BarChart,
+    PieChart,
+    LineChart,
+    Box
 } from 'lucide-react';
+
+const analyticsItems = [
+    { href: '/admin/analytics/revenue', label: 'Doanh thu', icon: TrendingUp },
+    { href: '/admin/analytics/orders', label: 'Đơn hàng', icon: BarChart3 },
+    { href: '/admin/analytics/sellers', label: 'Người bán', icon: Users },
+    { href: '/admin/analytics/products', label: 'Sản phẩm', icon: Box },
+];
+
+const managementItems = [
+    { href: '/admin/users', label: 'Người dùng', icon: Users },
+    { href: '/admin/products', label: 'Sản phẩm', icon: Package },
+    { href: '/admin/categories', label: 'Danh mục', icon: FolderTree },
+    { href: '/admin/orders', label: 'Đơn hàng', icon: ShoppingCart },
+    { href: '/admin/reviews', label: 'Đánh giá', icon: Star },
+    { href: '/admin/support', label: 'Hỗ trợ & Khiếu nại', icon: LifeBuoy },
+];
+
 import { cn } from '@/lib/utils';
 import { useUIStore } from '@/stores/uiStore';
 import { useAuthStore } from '@/stores/authStore';
@@ -26,16 +49,6 @@ import {
     TooltipContent,
     TooltipTrigger,
 } from '@/components/ui/tooltip';
-
-const navItems = [
-    { href: '/admin/dashboard', label: 'Dashboard', icon: LayoutDashboard },
-    { href: '/admin/users', label: 'Người dùng', icon: Users },
-    { href: '/admin/products', label: 'Sản phẩm', icon: Package },
-    { href: '/admin/categories', label: 'Danh mục', icon: FolderTree },
-    { href: '/admin/orders', label: 'Đơn hàng', icon: ShoppingCart },
-    { href: '/admin/reviews', label: 'Đánh giá', icon: Star },
-    { href: '/admin/support', label: 'Hỗ trợ & Khiếu nại', icon: LifeBuoy },
-];
 
 const bottomItems = [
     { href: '/admin/settings', label: 'Cài đặt', icon: Settings },
@@ -67,21 +80,37 @@ export function AdminSidebar() {
 
             <Separator className="bg-slate-800" />
 
-            {/* Navigation */}
-            <nav className="flex-1 space-y-1 overflow-y-auto px-3 py-4">
+            {/* Dashboard Link */}
+            <div className="px-3 py-4">
+                <Link
+                    href="/admin/dashboard"
+                    className={cn(
+                        'flex items-center gap-3 rounded-lg px-3 py-2.5 text-sm font-medium transition-all duration-200',
+                        pathname === '/admin/dashboard'
+                            ? 'bg-indigo-600/20 text-indigo-400 shadow-sm'
+                            : 'text-slate-400 hover:bg-slate-800/60 hover:text-slate-200'
+                    )}
+                >
+                    <LayoutDashboard className={cn('h-5 w-5 shrink-0', pathname === '/admin/dashboard' && 'text-indigo-400')} />
+                    {sidebarOpen && <span>Dashboard</span>}
+                </Link>
+            </div>
+
+            {/* Analytics Section */}
+            <nav className="space-y-1 px-3 py-2">
                 {sidebarOpen && (
                     <p className="mb-2 px-3 text-xs font-semibold uppercase tracking-wider text-slate-500">
-                        Quản lý
+                        Phân tích
                     </p>
                 )}
-                {navItems.map((item) => {
-                    const isActive = pathname === item.href || pathname.startsWith(item.href + '/');
+                {analyticsItems.map((item) => {
+                    const isActive = pathname === item.href;
                     const linkContent = (
                         <Link
                             key={item.href}
                             href={item.href}
                             className={cn(
-                                'flex items-center gap-3 rounded-lg px-3 py-2.5 text-sm font-medium transition-all duration-200',
+                                'flex items-center gap-3 rounded-lg px-3 py-2 text-sm font-medium transition-all duration-200',
                                 isActive
                                     ? 'bg-indigo-600/20 text-indigo-400 shadow-sm'
                                     : 'text-slate-400 hover:bg-slate-800/60 hover:text-slate-200'
@@ -89,24 +118,49 @@ export function AdminSidebar() {
                         >
                             <item.icon className={cn('h-5 w-5 shrink-0', isActive && 'text-indigo-400')} />
                             {sidebarOpen && <span>{item.label}</span>}
-                            {isActive && sidebarOpen && (
-                                <div className="ml-auto h-2 w-2 rounded-full bg-indigo-400" />
-                            )}
                         </Link>
                     );
+                    return sidebarOpen ? linkContent : (
+                        <Tooltip key={item.href} delayDuration={0}>
+                            <TooltipTrigger asChild>{linkContent}</TooltipTrigger>
+                            <TooltipContent side="right">{item.label}</TooltipContent>
+                        </Tooltip>
+                    );
+                })}
+            </nav>
 
-                    if (!sidebarOpen) {
-                        return (
-                            <Tooltip key={item.href} delayDuration={0}>
-                                <TooltipTrigger asChild>{linkContent}</TooltipTrigger>
-                                <TooltipContent side="right" className="bg-slate-900 text-slate-100">
-                                    {item.label}
-                                </TooltipContent>
-                            </Tooltip>
-                        );
-                    }
+            <Separator className="bg-slate-800 mx-3 my-2 w-auto" />
 
-                    return linkContent;
+            {/* Management Section */}
+            <nav className="flex-1 space-y-1 overflow-y-auto px-3 py-2">
+                {sidebarOpen && (
+                    <p className="mb-2 px-3 text-xs font-semibold uppercase tracking-wider text-slate-500">
+                        Quản lý
+                    </p>
+                )}
+                {managementItems.map((item) => {
+                    const isActive = pathname === item.href || pathname.startsWith(item.href + '/');
+                    const linkContent = (
+                        <Link
+                            key={item.href}
+                            href={item.href}
+                            className={cn(
+                                'flex items-center gap-3 rounded-lg px-3 py-2 text-sm font-medium transition-all duration-200',
+                                isActive
+                                    ? 'bg-indigo-600/20 text-indigo-400 shadow-sm'
+                                    : 'text-slate-400 hover:bg-slate-800/60 hover:text-slate-200'
+                            )}
+                        >
+                            <item.icon className={cn('h-5 w-5 shrink-0', isActive && 'text-indigo-400')} />
+                            {sidebarOpen && <span>{item.label}</span>}
+                        </Link>
+                    );
+                    return sidebarOpen ? linkContent : (
+                        <Tooltip key={item.href} delayDuration={0}>
+                            <TooltipTrigger asChild>{linkContent}</TooltipTrigger>
+                            <TooltipContent side="right">{item.label}</TooltipContent>
+                        </Tooltip>
+                    );
                 })}
             </nav>
 
