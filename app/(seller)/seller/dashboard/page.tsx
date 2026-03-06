@@ -1,27 +1,47 @@
 'use client';
 
-import React from 'react';
+import React, { useState } from 'react';
 import {
     Package,
     ShoppingCart,
-    TrendingUp,
     DollarSign,
-    ArrowUpRight,
     Plus,
     Loader2,
     Store,
     AlertTriangle,
+    TrendingUp,
+    TrendingDown,
 } from 'lucide-react';
 import { useQuery } from '@tanstack/react-query';
 import { useAuthStore } from '@/stores/authStore';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
+import {
+    Select,
+    SelectContent,
+    SelectItem,
+    SelectTrigger,
+    SelectValue,
+} from "@/components/ui/select";
 import Link from 'next/link';
+import {
+    LineChart, Line, BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, Legend, PieChart, Pie, Cell
+} from 'recharts';
+import { ordersService } from '@/services/orders.service';
 
 export default function SellerDashboard() {
     const { user } = useAuthStore();
     const shopName = (user as any)?.profile?.shopName || 'Gian hàng của bạn';
+
+    const [range, setRange] = useState('30d');
+
+    // Fetch analytics data
+    const { data: analyticsData, isLoading: isLoadingAnalytics } = useQuery({
+        queryKey: ['seller-analytics', user?.id, range],
+        queryFn: () => ordersService.getSellerAnalytics(range),
+        enabled: !!user?.id,
+    });
 
     // Fetch products for stats
     const { data: productsData, isLoading: isLoadingProducts } = useQuery({
@@ -63,32 +83,45 @@ export default function SellerDashboard() {
     const lowStockProducts = products.filter((p: any) => p.stockQuantity <= 5 && p.status === 'APPROVED');
     const totalOrders = orders.length;
     const pendingOrders = orders.filter((o: any) => o.status === 'PENDING' || o.status === 'PAID').length;
-    const totalRevenue = orders
-        .filter((o: any) => o.status !== 'CANCELLED')
-        .reduce((sum: number, o: any) => sum + Number(o.totalAmount || 0), 0);
+
+    const summary = analyticsData?.summary || { currentRevenue: 0, previousRevenue: 0, currentOrders: 0, previousOrders: 0 };
+
+    // Calculate percentage change
+    const revDiff = summary.previousRevenue ? ((summary.currentRevenue - summary.previousRevenue) / summary.previousRevenue) * 100 : 0;
+    const ordDiff = summary.previousOrders ? ((summary.currentOrders - summary.previousOrders) / summary.previousOrders) * 100 : 0;
+
+    const formatPercent = (val: number) => {
+        if (val === 0) return '0%';
+        return `${val > 0 ? '+' : ''}${val.toFixed(1)}%`;
+    };
 
     const recentOrders = orders.slice(0, 5);
-    const isLoading = isLoadingProducts || isLoadingOrders;
+    const isLoading = isLoadingProducts || isLoadingOrders || isLoadingAnalytics;
 
     const stats = [
         {
-            label: 'Tổng doanh thu',
-            value: isLoading ? '...' : `${totalRevenue.toLocaleString('vi-VN')}₫`,
+            label: 'Doanh thu',
+            value: isLoading ? '...' : `${summary.currentRevenue.toLocaleString('vi-VN')}₫`,
             icon: DollarSign,
-            desc: 'Tổng giá trị đơn hàng (trừ đã hủy)',
+            trend: formatPercent(revDiff),
+            isPositive: revDiff >= 0,
+            desc: summary.previousRevenue === 0 && summary.currentRevenue > 0 ? 'Tăng trưởng mới' : 'so với kỳ trước',
             color: 'text-emerald-600 bg-emerald-50',
         },
         {
             label: 'Đơn hàng',
-            value: isLoading ? '...' : String(totalOrders),
+            value: isLoading ? '...' : String(summary.currentOrders),
             icon: ShoppingCart,
-            desc: `${pendingOrders} đơn đang chờ xử lý`,
+            trend: formatPercent(ordDiff),
+            isPositive: ordDiff >= 0,
+            desc: summary.previousOrders === 0 && summary.currentOrders > 0 ? 'Đơn hàng mới' : 'so với kỳ trước',
             color: 'text-blue-600 bg-blue-50',
         },
         {
             label: 'Sản phẩm đang bán',
             value: isLoading ? '...' : String(approvedProducts),
             icon: Package,
+            trend: null,
             desc: `${totalProducts} tổng / ${pendingProducts} chờ duyệt`,
             color: 'text-violet-600 bg-violet-50',
         },
@@ -96,6 +129,7 @@ export default function SellerDashboard() {
             label: 'Cảnh báo kho',
             value: isLoading ? '...' : String(lowStockProducts.length),
             icon: AlertTriangle,
+            trend: null,
             desc: 'Sản phẩm sắp hết hàng (≤ 5)',
             color: lowStockProducts.length > 0 ? 'text-orange-600 bg-orange-50' : 'text-gray-400 bg-gray-50',
         },
@@ -130,7 +164,17 @@ export default function SellerDashboard() {
                     <h1 className="text-3xl font-bold text-gray-900">Chào mừng trở lại, {shopName}! 👋</h1>
                     <p className="text-gray-500">Đây là cái nhìn tổng quan về gian hàng của bạn ngày hôm nay.</p>
                 </div>
-                <div className="flex gap-2">
+                <div className="flex flex-wrap gap-3 items-center">
+                    <Select value={range} onValueChange={setRange}>
+                        <SelectTrigger className="w-[180px] bg-white">
+                            <SelectValue placeholder="Chọn thời gian" />
+                        </SelectTrigger>
+                        <SelectContent>
+                            <SelectItem value="7d">7 Ngày qua</SelectItem>
+                            <SelectItem value="30d">30 Ngày qua</SelectItem>
+                            <SelectItem value="this_month">Tháng này</SelectItem>
+                        </SelectContent>
+                    </Select>
                     <Button className="bg-emerald-600 hover:bg-emerald-700 text-white" asChild>
                         <Link href="/seller/products">
                             <Plus className="h-4 w-4 mr-2" />
@@ -149,6 +193,12 @@ export default function SellerDashboard() {
                                 <div className={`p-2.5 rounded-xl ${stat.color}`}>
                                     <stat.icon className="h-5 w-5" />
                                 </div>
+                                {stat.trend && (
+                                    <div className={`flex items-center text-xs font-bold px-2 py-1 rounded-full ${stat.isPositive ? 'text-emerald-700 bg-emerald-100' : 'text-red-700 bg-red-100'}`}>
+                                        {stat.isPositive ? <TrendingUp className="h-3 w-3 mr-1" /> : <TrendingDown className="h-3 w-3 mr-1" />}
+                                        {stat.trend}
+                                    </div>
+                                )}
                             </div>
                             <div>
                                 <p className="text-sm text-gray-500 font-medium">{stat.label}</p>
@@ -159,6 +209,117 @@ export default function SellerDashboard() {
                     </Card>
                 ))}
             </div>
+
+            {/* Analytics Charts */}
+            {isLoadingAnalytics ? (
+                <div className="flex justify-center py-12">
+                    <Loader2 className="h-8 w-8 animate-spin text-emerald-600 opacity-50" />
+                </div>
+            ) : analyticsData && (
+                <div className="space-y-8">
+                    {/* Revenue & Orders Line Chart */}
+                    <Card className="border-none shadow-sm">
+                        <CardHeader>
+                            <CardTitle>Doanh thu & Số đơn</CardTitle>
+                            <CardDescription>Biểu đồ xu hướng bán hàng trong kỳ</CardDescription>
+                        </CardHeader>
+                        <CardContent>
+                            <div className="h-[300px] w-full mt-4">
+                                <ResponsiveContainer width="100%" height="100%">
+                                    <LineChart data={analyticsData.chartData} margin={{ top: 5, right: 20, bottom: 5, left: 0 }}>
+                                        <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#E5E7EB" />
+                                        <XAxis dataKey="date" tick={{ fontSize: 12, fill: '#6B7280' }} axisLine={false} tickLine={false} />
+                                        <YAxis yAxisId="left" tick={{ fontSize: 12, fill: '#6B7280' }} axisLine={false} tickLine={false} tickFormatter={(val) => `${(val / 1000000).toFixed(1)}M`} />
+                                        <YAxis yAxisId="right" orientation="right" tick={{ fontSize: 12, fill: '#6B7280' }} axisLine={false} tickLine={false} />
+                                        <Tooltip
+                                            contentStyle={{ borderRadius: '8px', border: 'none', boxShadow: '0 4px 6px -1px rgb(0 0 0 / 0.1)' }}
+                                            formatter={(value: any, name: any) => [
+                                                name === 'sales' ? `${Number(value).toLocaleString('vi-VN')}₫` : value,
+                                                name === 'sales' ? 'Doanh thu' : 'Số đơn'
+                                            ]}
+                                            labelStyle={{ fontWeight: 'bold', color: '#374151' }}
+                                        />
+                                        <Legend wrapperStyle={{ paddingTop: '20px' }} />
+                                        <Line yAxisId="left" type="monotone" dataKey="sales" name="sales" stroke="#10B981" strokeWidth={3} dot={false} activeDot={{ r: 6 }} />
+                                        <Line yAxisId="right" type="monotone" dataKey="orders" name="orders" stroke="#6366F1" strokeWidth={3} dot={false} activeDot={{ r: 6 }} />
+                                    </LineChart>
+                                </ResponsiveContainer>
+                            </div>
+                        </CardContent>
+                    </Card>
+
+                    <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
+                        {/* Top Products Bar Chart */}
+                        <Card className="border-none shadow-sm">
+                            <CardHeader>
+                                <CardTitle>Top Sản Phẩm (Số Lượng Bán)</CardTitle>
+                                <CardDescription>Sản phẩm bán chạy nhất trong kỳ</CardDescription>
+                            </CardHeader>
+                            <CardContent>
+                                <div className="h-[300px] w-full mt-4">
+                                    <ResponsiveContainer width="100%" height="100%">
+                                        <BarChart data={analyticsData.topProducts} layout="vertical" margin={{ top: 5, right: 20, bottom: 5, left: 0 }}>
+                                            <CartesianGrid strokeDasharray="3 3" horizontal={false} stroke="#E5E7EB" />
+                                            <XAxis type="number" tick={{ fontSize: 12, fill: '#6B7280' }} axisLine={false} tickLine={false} />
+                                            <YAxis dataKey="name" type="category" width={100} tick={{ fontSize: 12, fill: '#6B7280' }} axisLine={false} tickLine={false} />
+                                            <Tooltip
+                                                cursor={{ fill: '#F3F4F6' }}
+                                                contentStyle={{ borderRadius: '8px', border: 'none', boxShadow: '0 4px 6px -1px rgb(0 0 0 / 0.1)' }}
+                                                formatter={(value: any) => [value, 'Đã bán']}
+                                                labelStyle={{ fontWeight: 'bold', color: '#374151', marginBottom: '8px' }}
+                                            />
+                                            <Bar dataKey="sold" name="Đã bán" fill="#3B82F6" radius={[0, 4, 4, 0]} maxBarSize={30} />
+                                        </BarChart>
+                                    </ResponsiveContainer>
+                                </div>
+                            </CardContent>
+                        </Card>
+
+                        {/* Order Status Donut Chart */}
+                        <Card className="border-none shadow-sm">
+                            <CardHeader>
+                                <CardTitle>Trạng Thái Đơn Hàng</CardTitle>
+                                <CardDescription>Tỉ lệ các đơn hàng trong kỳ</CardDescription>
+                            </CardHeader>
+                            <CardContent>
+                                <div className="h-[300px] w-full mt-4">
+                                    <ResponsiveContainer width="100%" height="100%">
+                                        <PieChart>
+                                            <Pie
+                                                data={analyticsData.orderStatusData}
+                                                cx="50%"
+                                                cy="50%"
+                                                innerRadius={60}
+                                                outerRadius={100}
+                                                paddingAngle={5}
+                                                dataKey="value"
+                                            >
+                                                {analyticsData.orderStatusData?.map((entry: any, index: number) => {
+                                                    const COLORS = {
+                                                        'PENDING': '#F59E0B',
+                                                        'PAID': '#3B82F6',
+                                                        'SHIPPING': '#8B5CF6',
+                                                        'DELIVERED': '#10B981',
+                                                        'CANCELLED': '#EF4444'
+                                                    };
+                                                    return <Cell key={`cell-${index}`} fill={(COLORS as any)[entry.name] || '#6B7280'} />;
+                                                })}
+                                            </Pie>
+                                            <Tooltip
+                                                contentStyle={{ borderRadius: '8px', border: 'none', boxShadow: '0 4px 6px -1px rgb(0 0 0 / 0.1)' }}
+                                                formatter={(value: any, name: any) => [value, name === 'PENDING' ? 'Chờ xử lý' : name === 'PAID' ? 'Đã thanh toán' : name === 'SHIPPING' ? 'Đang giao' : name === 'DELIVERED' ? 'Đã giao' : name === 'CANCELLED' ? 'Đã hủy' : name]}
+                                            />
+                                            <Legend
+                                                formatter={(value: any) => <span className="text-sm font-medium text-gray-700">{value === 'PENDING' ? 'Chờ xử lý' : value === 'PAID' ? 'Đã thanh toán' : value === 'SHIPPING' ? 'Đang giao' : value === 'DELIVERED' ? 'Đã giao' : value === 'CANCELLED' ? 'Đã hủy' : value}</span>}
+                                            />
+                                        </PieChart>
+                                    </ResponsiveContainer>
+                                </div>
+                            </CardContent>
+                        </Card>
+                    </div>
+                </div>
+            )}
 
             {/* Low Stock Alerts */}
             {lowStockProducts.length > 0 && (

@@ -17,4 +17,13 @@ export const usersService = {
     delete: async (id: string): Promise<void> => {
         return api.delete(`/users/${id}`);
     },
+
+    // ─── Profile (current user) ──────────────────────────────────────────
+    getProfile: async (): Promise<any> => {
+        return api.get('/users/me');
+    },
+
+    updateProfile: async (data: { address?: string }): Promise<any> => {
+        return api.put('/users/me', data);
+    },
 };

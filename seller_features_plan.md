@@ -19,14 +19,14 @@ Cho phép seller thêm, sửa, xóa và quản lý kho hàng.
 - [x] **Cập nhật sản phẩm:** Form chỉnh sửa thông tin sản phẩm đầy đủ.
 - [x] **Quản lý Hình ảnh:** Chức năng upload ảnh, chọn ảnh đại diện (Primary Image), và xóa ảnh.
 
-## 3. Quản lý Đơn hàng (Orders) - Ưu tiên: Cao
+## 3. Quản lý Đơn hàng (Orders) - Ưu tiên: Cao *(Đã hoàn thành)*
 Nơi seller xử lý các đơn hàng được khách hàng đặt mua từ gian hàng của mình.
-- [ ] **Danh sách đơn hàng:** Hiển thị các đơn hàng kèm trạng thái (Chờ xác nhận, Đang chuẩn bị, Đang giao, Đã giao, Đã hủy).
-- [ ] **Chi tiết đơn hàng:** Xem thông tin sản phẩm khách đặt, địa chỉ giao hàng, phương thức thanh toán.
-- [ ] **Cập nhật trạng thái đơn hàng:** 
+- [x] **Danh sách đơn hàng:** Hiển thị các đơn hàng kèm trạng thái (Chờ xác nhận, Đang chuẩn bị, Đang giao, Đã giao, Đã hủy). Có summary cards thống kê nhanh.
+- [x] **Chi tiết đơn hàng:** Dialog xem thông tin sản phẩm khách đặt, địa chỉ giao hàng, phương thức thanh toán, trạng thái thanh toán.
+- [x] **Cập nhật trạng thái đơn hàng:** 
   - Chuyển từ *Chờ xác nhận* -> *Đang xử lý* -> *Đang giao hàng*.
   - Hủy đơn hàng (nếu có lý do chính đáng hoặc hết hàng).
-- [ ] **Lọc và tìm kiếm:** Tìm đơn hàng theo mã đơn, tên khách hàng hoặc ngày đặt.
+- [x] **Lọc và tìm kiếm:** Tabs lọc nhanh theo trạng thái + tìm đơn hàng theo mã đơn hoặc tên sản phẩm.
 
 ## 4. Quản lý Doanh thu & Rút tiền (Withdrawal/Wallet) - Ưu tiên: Trung bình
 Quản lý tiền bán được và yêu cầu rút tiền về tài khoản ngân hàng.

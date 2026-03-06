@@ -1,20 +1,40 @@
 import api from './api';
-import type { Order, OrderFilters, UpdateOrderRequest, PaginatedResponse } from '@/types';
+import type { Order, OrderStatus } from '@/types';
+
+export interface PlaceOrderRequest {
+    shippingAddress: string;
+    paymentMethod: string;
+    items: { productId: string; quantity: number }[];
+}
 
 export const ordersService = {
-    getAll: async (params?: OrderFilters): Promise<PaginatedResponse<Order>> => {
-        return api.get('/orders', { params });
+    // ─── Buyer APIs ──────────────────────────────────────────────────────
+    placeOrder: async (data: PlaceOrderRequest): Promise<Order> => {
+        return api.post('/orders', data);
+    },
+
+    getMyOrders: async (): Promise<Order[]> => {
+        return api.get('/orders');
     },
 
     getById: async (id: string): Promise<Order> => {
         return api.get(`/orders/${id}`);
     },
 
-    update: async (id: string, data: UpdateOrderRequest): Promise<Order> => {
-        return api.patch(`/orders/${id}`, data);
+    cancelOrder: async (id: string): Promise<any> => {
+        return api.patch(`/orders/${id}/cancel`);
     },
 
-    delete: async (id: string): Promise<void> => {
-        return api.delete(`/orders/${id}`);
+    // ─── Seller APIs ─────────────────────────────────────────────────────
+    getSellerOrders: async (): Promise<Order[]> => {
+        return api.get('/orders/seller/all');
+    },
+
+    updateOrderStatus: async (id: string, status: OrderStatus): Promise<Order> => {
+        return api.patch(`/orders/${id}/status`, { status });
+    },
+
+    getSellerAnalytics: async (range: string = '30d'): Promise<any> => {
+        return api.get(`/orders/seller/analytics?range=${range}`);
     },
 };
