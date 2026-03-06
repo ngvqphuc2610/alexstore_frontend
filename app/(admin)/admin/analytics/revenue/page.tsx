@@ -3,6 +3,9 @@
 import { useState } from 'react';
 import { useQuery } from '@tanstack/react-query';
 import { adminAnalyticsService } from '@/services/admin-analytics.service';
+import { DateRangeSelector, type DateRange } from '@/components/admin/analytics/date-range-selector';
+import { SellerSelector } from '@/components/admin/analytics/seller-selector';
+import { CategorySelector } from '@/components/admin/analytics/category-selector';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { formatCurrency } from '@/lib/constants';
@@ -18,11 +21,35 @@ import {
 import { Loader2, TrendingUp, DollarSign, Calendar } from 'lucide-react';
 
 export default function RevenueAnalyticsPage() {
-    const [range, setRange] = useState('30d');
+    const [dateRange, setDateRange] = useState<DateRange>({ range: '30d' });
+    const [sellerId, setSellerId] = useState('all');
+    const [categoryId, setCategoryId] = useState('all');
+
+    const getRangeLabel = () => {
+        switch (dateRange.range) {
+            case 'today': return 'Hôm nay';
+            case '7d': return '7 ngày qua';
+            case '30d': return '30 ngày qua';
+            case 'this_month': return 'Tháng này';
+            case 'last_month': return 'Tháng trước';
+            case 'custom_range':
+                if (dateRange.from && dateRange.to) {
+                    return `${dateRange.from} - ${dateRange.to}`;
+                }
+                return 'Tùy chọn';
+            default: return '30 ngày qua';
+        }
+    };
 
     const { data: revenueData, isLoading } = useQuery({
-        queryKey: ['admin-revenue-analytics', range],
-        queryFn: () => adminAnalyticsService.getRevenueAnalytics(range)
+        queryKey: ['admin-revenue-analytics', dateRange, sellerId, categoryId],
+        queryFn: () => adminAnalyticsService.getRevenueAnalytics(
+            dateRange.range,
+            sellerId === 'all' ? undefined : sellerId,
+            categoryId === 'all' ? undefined : categoryId,
+            dateRange.from,
+            dateRange.to
+        )
     });
 
     const totalRevenue = revenueData?.totalRevenue || 0;
@@ -45,25 +72,17 @@ export default function RevenueAnalyticsPage() {
                         Theo dõi biến động dòng tiền và doanh thu toàn hệ thống.
                     </p>
                 </div>
-                <div className="flex items-center gap-2">
-                    <Calendar className="h-4 w-4 text-muted-foreground" />
-                    <Select value={range} onValueChange={setRange}>
-                        <SelectTrigger className="w-[180px]">
-                            <SelectValue placeholder="Chọn khoảng thời gian" />
-                        </SelectTrigger>
-                        <SelectContent>
-                            <SelectItem value="7d">7 ngày qua</SelectItem>
-                            <SelectItem value="30d">30 ngày qua</SelectItem>
-                            <SelectItem value="this_month">Tháng này</SelectItem>
-                        </SelectContent>
-                    </Select>
+                <div className="flex flex-wrap items-center gap-4">
+                    <CategorySelector value={categoryId} onValueChange={setCategoryId} />
+                    <SellerSelector value={sellerId} onValueChange={setSellerId} />
+                    <DateRangeSelector value={dateRange} onValueChange={setDateRange} />
                 </div>
             </div>
 
             <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
                 <Card className="border-0 shadow-sm">
                     <CardHeader className="pb-2">
-                        <CardDescription>Tổng doanh thu ({range})</CardDescription>
+                        <CardDescription>Tổng doanh thu ({getRangeLabel()})</CardDescription>
                         <CardTitle className="text-2xl font-bold flex items-center gap-2">
                             <DollarSign className="h-5 w-5 text-emerald-500" />
                             {formatCurrency(totalRevenue)}

@@ -1,16 +1,50 @@
 'use client';
 
+import { useState } from 'react';
 import { useQuery } from '@tanstack/react-query';
 import { adminAnalyticsService } from '@/services/admin-analytics.service';
+import { DateRangeSelector, type DateRange } from '@/components/admin/analytics/date-range-selector';
+import { SellerSelector } from '@/components/admin/analytics/seller-selector';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { formatCurrency } from '@/lib/constants';
+import { CategorySelector } from '@/components/admin/analytics/category-selector';
+import { Pagination } from '@/components/admin/analytics/pagination';
 import { Loader2, Users, Trophy } from 'lucide-react';
 
 export default function SellersAnalyticsPage() {
+    const [dateRange, setDateRange] = useState<DateRange>({ range: '30d' });
+    const [sellerId, setSellerId] = useState('all');
+    const [categoryId, setCategoryId] = useState('all');
+    const [page, setPage] = useState(1);
+
+    const getRangeLabel = () => {
+        switch (dateRange.range) {
+            case 'today': return 'Hôm nay';
+            case '7d': return '7 ngày qua';
+            case '30d': return '30 ngày qua';
+            case 'this_month': return 'Tháng này';
+            case 'last_month': return 'Tháng trước';
+            case 'custom_range':
+                if (dateRange.from && dateRange.to) {
+                    return `${dateRange.from} - ${dateRange.to}`;
+                }
+                return 'Tùy chọn';
+            default: return '30 ngày qua';
+        }
+    };
+
     const { data: sellersData, isLoading } = useQuery({
-        queryKey: ['admin-sellers-analytics'],
-        queryFn: () => adminAnalyticsService.getSellersAnalytics()
+        queryKey: ['admin-sellers-analytics', dateRange, sellerId, categoryId, page],
+        queryFn: () => adminAnalyticsService.getSellersAnalytics(
+            dateRange.range,
+            sellerId === 'all' ? undefined : sellerId,
+            categoryId === 'all' ? undefined : categoryId,
+            dateRange.from,
+            dateRange.to,
+            page,
+            10
+        )
     });
 
     if (isLoading) {
@@ -23,11 +57,18 @@ export default function SellersAnalyticsPage() {
 
     return (
         <div className="space-y-6">
-            <div>
-                <h1 className="text-3xl font-bold tracking-tight">Phân tích Người bán</h1>
-                <p className="text-muted-foreground mt-1">
-                    Hiệu suất và tăng trưởng của các shop trong hệ thống AlexStore.
-                </p>
+            <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
+                <div>
+                    <h1 className="text-3xl font-bold tracking-tight">Phân tích Người bán</h1>
+                    <p className="text-muted-foreground mt-1">
+                        Hiệu suất và tăng trưởng của các shop trong hệ thống AlexStore.
+                    </p>
+                </div>
+                <div className="flex flex-wrap items-center gap-4">
+                    <CategorySelector value={categoryId} onValueChange={(val) => { setCategoryId(val); setPage(1); }} />
+                    <SellerSelector value={sellerId} onValueChange={(val) => { setSellerId(val); setPage(1); }} />
+                    <DateRangeSelector value={dateRange} onValueChange={(val) => { setDateRange(val); setPage(1); }} />
+                </div>
             </div>
 
             <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
@@ -46,9 +87,9 @@ export default function SellersAnalyticsPage() {
                 <CardHeader>
                     <CardTitle className="flex items-center gap-2">
                         <Trophy className="h-5 w-5 text-amber-500" />
-                        Top 10 Người bán doanh thu cao nhất
+                        Top 10 Người bán doanh thu cao nhất ({getRangeLabel()})
                     </CardTitle>
-                    <CardDescription>Xếp hạng dựa trên tổng giá trị đơn hàng hoàn thành.</CardDescription>
+                    <CardDescription>Xếp hạng dựa trên tổng giá trị giao dịch trong khoảng thời gian này.</CardDescription>
                 </CardHeader>
                 <CardContent>
                     <Table>
@@ -62,7 +103,7 @@ export default function SellersAnalyticsPage() {
                         <TableBody>
                             {sellersData?.topSellers?.map((seller: any, index: number) => (
                                 <TableRow key={seller.id}>
-                                    <TableCell className="font-bold text-muted-foreground">{index + 1}</TableCell>
+                                    <TableCell className="font-bold text-muted-foreground">{(page - 1) * 10 + index + 1}</TableCell>
                                     <TableCell className="font-medium">{seller.username}</TableCell>
                                     <TableCell className="text-right font-semibold text-emerald-600">
                                         {formatCurrency(seller.revenue)}
@@ -71,6 +112,13 @@ export default function SellersAnalyticsPage() {
                             ))}
                         </TableBody>
                     </Table>
+                    {sellersData?.pagination && (
+                        <Pagination
+                            currentPage={page}
+                            totalPages={sellersData.pagination.pages}
+                            onPageChange={setPage}
+                        />
+                    )}
                 </CardContent>
             </Card>
         </div>

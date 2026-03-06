@@ -3,6 +3,9 @@
 import { useState } from 'react';
 import { useQuery } from '@tanstack/react-query';
 import { adminAnalyticsService } from '@/services/admin-analytics.service';
+import { DateRangeSelector, type DateRange } from '@/components/admin/analytics/date-range-selector';
+import { SellerSelector } from '@/components/admin/analytics/seller-selector';
+import { CategorySelector } from '@/components/admin/analytics/category-selector';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import {
@@ -30,11 +33,35 @@ const STATUS_LABELS: Record<string, string> = {
 };
 
 export default function OrdersAnalyticsPage() {
-    const [range, setRange] = useState('30d');
+    const [dateRange, setDateRange] = useState<DateRange>({ range: '30d' });
+    const [sellerId, setSellerId] = useState('all');
+    const [categoryId, setCategoryId] = useState('all');
+
+    const getRangeLabel = () => {
+        switch (dateRange.range) {
+            case 'today': return 'Hôm nay';
+            case '7d': return '7 ngày qua';
+            case '30d': return '30 ngày qua';
+            case 'this_month': return 'Tháng này';
+            case 'last_month': return 'Tháng trước';
+            case 'custom_range':
+                if (dateRange.from && dateRange.to) {
+                    return `${dateRange.from} - ${dateRange.to}`;
+                }
+                return 'Tùy chọn';
+            default: return '30 ngày qua';
+        }
+    };
 
     const { data: ordersData, isLoading } = useQuery({
-        queryKey: ['admin-orders-analytics', range],
-        queryFn: () => adminAnalyticsService.getOrdersAnalytics(range)
+        queryKey: ['admin-orders-analytics', dateRange, sellerId, categoryId],
+        queryFn: () => adminAnalyticsService.getOrdersAnalytics(
+            dateRange.range,
+            sellerId === 'all' ? undefined : sellerId,
+            categoryId === 'all' ? undefined : categoryId,
+            dateRange.from,
+            dateRange.to
+        )
     });
 
     const totalOrders = ordersData?.totalOrders || 0;
@@ -62,18 +89,10 @@ export default function OrdersAnalyticsPage() {
                         Theo dõi lượng giao dịch và trạng thái đơn hàng trong hệ thống.
                     </p>
                 </div>
-                <div className="flex items-center gap-2">
-                    <Calendar className="h-4 w-4 text-muted-foreground" />
-                    <Select value={range} onValueChange={setRange}>
-                        <SelectTrigger className="w-[180px]">
-                            <SelectValue placeholder="Chọn khoảng thời gian" />
-                        </SelectTrigger>
-                        <SelectContent>
-                            <SelectItem value="7d">7 ngày qua</SelectItem>
-                            <SelectItem value="30d">30 ngày qua</SelectItem>
-                            <SelectItem value="this_month">Tháng này</SelectItem>
-                        </SelectContent>
-                    </Select>
+                <div className="flex flex-wrap items-center gap-4">
+                    <CategorySelector value={categoryId} onValueChange={setCategoryId} />
+                    <SellerSelector value={sellerId} onValueChange={setSellerId} />
+                    <DateRangeSelector value={dateRange} onValueChange={setDateRange} />
                 </div>
             </div>
 
@@ -81,7 +100,7 @@ export default function OrdersAnalyticsPage() {
                 <Card className="lg:col-span-2 border-0 shadow-sm">
                     <CardHeader>
                         <CardTitle>Xu hướng Đơn hàng</CardTitle>
-                        <CardDescription>Số lượng đơn hàng mới mỗi ngày ({range})</CardDescription>
+                        <CardDescription>Số lượng đơn hàng mới mỗi ngày ({getRangeLabel()})</CardDescription>
                     </CardHeader>
                     <CardContent>
                         <div className="h-[400px] w-full mt-4">
@@ -104,7 +123,7 @@ export default function OrdersAnalyticsPage() {
                 <div className="space-y-6">
                     <Card className="border-0 shadow-sm">
                         <CardHeader className="pb-2">
-                            <CardDescription>Tổng lượt đặt ({range})</CardDescription>
+                            <CardDescription>Tổng lượt đặt ({getRangeLabel()})</CardDescription>
                             <CardTitle className="text-3xl font-bold flex items-center gap-2 text-indigo-600">
                                 <ShoppingCart className="h-6 w-6" />
                                 {totalOrders}
