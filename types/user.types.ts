@@ -28,6 +28,7 @@ export interface User {
     username: string;
     email: string;
     role: Role;
+    phoneNumber?: string;
     isDeleted: boolean;
     createdAt: string;
     updatedAt: string;
@@ -55,6 +56,10 @@ export interface AuthResponse {
 }
 
 export interface UpdateUserRequest {
+    username?: string;
+    email?: string;
+    phoneNumber?: string;
+    address?: string;
     role?: Role;
     isDeleted?: boolean;
 }

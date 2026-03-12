@@ -23,7 +23,7 @@ export const usersService = {
         return api.get('/users/me');
     },
 
-    updateProfile: async (data: { address?: string }): Promise<any> => {
+    updateProfile: async (data: { address?: string; phoneNumber?: string }): Promise<any> => {
         return api.put('/users/me', data);
     },
 };
