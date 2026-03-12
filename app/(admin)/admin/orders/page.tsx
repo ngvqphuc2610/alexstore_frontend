@@ -49,57 +49,41 @@ import { ORDER_STATUS_CONFIG, PAYMENT_STATUS_CONFIG, formatCurrency, formatDate 
 import type { OrderStatus, PaymentStatus } from '@/types';
 import { CopyableId } from '@/components/shared/CopyableId';
 
-// ─── Mock Data (1-2 items for testing) ────────────────────────────────────────
-const mockOrders = [
-    {
-        id: '018e698b-24b5-7123-9a8b-fedcba987654',
-        orderCode: 'ORD-2026-001',
-        buyer: 'Nguyễn Văn A',
-        buyerEmail: 'a@email.com',
-        totalAmount: 1250000,
-        status: 'PENDING' as OrderStatus,
-        paymentMethod: 'COD',
-        paymentStatus: 'UNPAID' as PaymentStatus,
-        shippingAddress: '123 Nguyễn Huệ, Q1, TP.HCM',
-        createdAt: '2026-03-03T10:30:00Z',
-        items: [
-            { name: 'iPhone 16 Pro Max 256GB', quantity: 1, price: 1250000 },
-        ],
-    },
-    {
-        id: '018e698b-3cde-7517-8e6f-7c1573980f91',
-        orderCode: 'ORD-2026-002',
-        buyer: 'Trần Thị B',
-        buyerEmail: 'b@email.com',
-        totalAmount: 3890000,
-        status: 'PAID' as OrderStatus,
-        paymentMethod: 'BANK_TRANSFER',
-        paymentStatus: 'PAID' as PaymentStatus,
-        shippingAddress: '456 Lê Lợi, Q3, TP.HCM',
-        createdAt: '2026-03-03T09:15:00Z',
-        items: [
-            { name: 'AirPods Pro 3', quantity: 1, price: 890000 },
-            { name: 'Ốp lưng iPhone', quantity: 1, price: 3000000 },
-        ],
-    },
-];
+import { useQuery } from '@tanstack/react-query';
+import { ordersService } from '@/services/orders.service';
+import { Loader2 } from 'lucide-react';
+import { useDebounce } from '@/hooks/useDebounce';
 
 export default function AdminOrdersPage() {
     const [search, setSearch] = useState('');
+    const debouncedSearch = useDebounce(search, 500);
     const [statusFilter, setStatusFilter] = useState<string>('all');
+    const [page, setPage] = useState(1);
     const [detailDialogOpen, setDetailDialogOpen] = useState(false);
     const [updateDialogOpen, setUpdateDialogOpen] = useState(false);
-    const [selectedOrder, setSelectedOrder] = useState<typeof mockOrders[0] | null>(null);
+    const [selectedOrder, setSelectedOrder] = useState<any | null>(null);
 
-    const sortedOrders = [...mockOrders].sort((a, b) => a.id.localeCompare(b.id));
-
-    const filteredOrders = sortedOrders.filter((order) => {
-        const matchesSearch =
-            order.orderCode.toLowerCase().includes(search.toLowerCase()) ||
-            order.buyer.toLowerCase().includes(search.toLowerCase());
-        const matchesStatus = statusFilter === 'all' || order.status === statusFilter;
-        return matchesSearch && matchesStatus;
+    const { data, isLoading, isPlaceholderData } = useQuery({
+        queryKey: ['admin-orders', debouncedSearch, statusFilter, page],
+        queryFn: () => ordersService.getAll({
+            status: statusFilter === 'all' ? undefined : statusFilter,
+            page,
+            limit: 10,
+            search: debouncedSearch || undefined
+        }),
+        placeholderData: (previousData) => previousData,
     });
+
+    const ordersData = data?.data || [];
+    const meta = data?.meta;
+
+    if (isLoading && !isPlaceholderData) {
+        return (
+            <div className="flex h-[60vh] items-center justify-center">
+                <Loader2 className="h-8 w-8 animate-spin text-indigo-600" />
+            </div>
+        );
+    }
 
     return (
         <div className="space-y-6">
@@ -114,7 +98,7 @@ export default function AdminOrdersPage() {
                 {(['PENDING', 'PAID', 'SHIPPING', 'DELIVERED', 'CANCELLED'] as OrderStatus[]).map((status) => (
                     <Card key={status} className="border-0 shadow-sm">
                         <CardContent className="pt-6">
-                            <div className="text-2xl font-bold">{mockOrders.filter(o => o.status === status).length}</div>
+                            <div className="text-2xl font-bold">0</div>
                             <p className="text-xs text-muted-foreground">{ORDER_STATUS_CONFIG[status].label}</p>
                         </CardContent>
                     </Card>
@@ -162,7 +146,7 @@ export default function AdminOrdersPage() {
                             </TableRow>
                         </TableHeader>
                         <TableBody>
-                            {filteredOrders.map((order, index) => (
+                            {ordersData.map((order: any, index: number) => (
                                 <TableRow key={order.id} className="hover:bg-muted/50">
                                     <TableCell className="font-medium text-muted-foreground">
                                         #{index + 1}
@@ -211,12 +195,12 @@ export default function AdminOrdersPage() {
 
                     <div className="mt-4 flex items-center justify-between">
                         <p className="text-sm text-muted-foreground">
-                            Hiển thị {filteredOrders.length} / {mockOrders.length} đơn hàng
+                            Hiển thị {ordersData.length} / {meta?.total || 0} đơn hàng
                         </p>
                         <div className="flex gap-2">
-                            <Button variant="outline" size="sm" disabled>Trước</Button>
-                            <Button variant="outline" size="sm" className="bg-primary text-primary-foreground">1</Button>
-                            <Button variant="outline" size="sm" disabled>Sau</Button>
+                            <Button variant="outline" size="sm" onClick={() => setPage(p => Math.max(1, p - 1))} disabled={page === 1}>Trước</Button>
+                            <Button variant="outline" size="sm" className="bg-primary text-primary-foreground">{page}</Button>
+                            <Button variant="outline" size="sm" onClick={() => setPage(p => p + 1)} disabled={page >= (meta?.totalPages || 1)}>Sau</Button>
                         </div>
                     </div>
                 </CardContent>
@@ -257,13 +241,13 @@ export default function AdminOrdersPage() {
                             <div>
                                 <p className="text-sm font-medium mb-2">Sản phẩm</p>
                                 <div className="space-y-2">
-                                    {selectedOrder.items.map((item, idx) => (
+                                    {selectedOrder.orderItems?.map((item: any, idx: number) => (
                                         <div key={idx} className="flex justify-between items-center bg-muted/50 rounded-lg p-3 text-sm">
                                             <div>
-                                                <p className="font-medium">{item.name}</p>
+                                                <p className="font-medium">{item.product?.name || 'Sản phẩm'}</p>
                                                 <p className="text-xs text-muted-foreground">x{item.quantity}</p>
                                             </div>
-                                            <p className="font-semibold">{formatCurrency(item.price)}</p>
+                                            <p className="font-semibold">{formatCurrency(item.priceAtPurchase)}</p>
                                         </div>
                                     ))}
                                 </div>

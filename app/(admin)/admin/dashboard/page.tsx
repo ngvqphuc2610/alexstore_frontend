@@ -92,9 +92,12 @@ const recentUsers = [
     { id: '1', username: 'nguyenvana', email: 'a@email.com', role: 'BUYER', createdAt: '2026-03-03T12:00:00Z' },
 ];
 
-
 import { useQuery } from '@tanstack/react-query';
 import { adminAnalyticsService } from '@/services/admin-analytics.service';
+import { ordersService } from '@/services/orders.service';
+import { productsService } from '@/services/products.service';
+import { usersService } from '@/services/users.service';
+
 import {
     ResponsiveContainer,
     LineChart,
@@ -132,11 +135,26 @@ export default function AdminDashboardPage() {
     });
 
     const { data: ordersData, isLoading: isLoadingOrders } = useQuery({
+        queryKey: ['admin-orders-recent'],
+        queryFn: () => ordersService.getAll({ limit: 5 })
+    });
+
+    const { data: ordersAnalyticsData, isLoading: isLoadingOrdersAnalytics } = useQuery({
         queryKey: ['admin-orders-distribution'],
         queryFn: () => adminAnalyticsService.getOrdersAnalytics('30d')
     });
 
-    if (isLoadingOverview || isLoadingRevenue || isLoadingOrders) {
+    const { data: pendingProductsData, isLoading: isLoadingPending } = useQuery({
+        queryKey: ['admin-products-pending'],
+        queryFn: () => productsService.getAll({ status: 'PENDING', limit: 5 })
+    });
+
+    const { data: usersData, isLoading: isLoadingUsers } = useQuery({
+        queryKey: ['admin-users-recent'],
+        queryFn: () => usersService.getAll({ limit: 5 })
+    });
+
+    if (isLoadingOverview || isLoadingRevenue || isLoadingOrdersAnalytics || isLoadingOrders || isLoadingPending || isLoadingUsers) {
         return (
             <div className="flex h-[60vh] items-center justify-center">
                 <Loader2 className="h-8 w-8 animate-spin text-indigo-600" />
@@ -144,11 +162,15 @@ export default function AdminDashboardPage() {
         );
     }
 
-    const orderDistribution = ordersData ? [
-        { status: 'DELIVERED', count: ordersData.completedOrders || 0 },
-        { status: 'CANCELLED', count: ordersData.cancelledOrders || 0 },
-        { status: 'PENDING', count: Math.max(0, (ordersData.totalOrders || 0) - ((ordersData.completedOrders || 0) + (ordersData.cancelledOrders || 0))) }
+    const orderDistribution = ordersAnalyticsData ? [
+        { status: 'DELIVERED', count: ordersAnalyticsData.completedOrders || 0 },
+        { status: 'CANCELLED', count: ordersAnalyticsData.cancelledOrders || 0 },
+        { status: 'PENDING', count: Math.max(0, (ordersAnalyticsData.totalOrders || 0) - ((ordersAnalyticsData.completedOrders || 0) + (ordersAnalyticsData.cancelledOrders || 0))) }
     ].filter((i: any) => i.count > 0) : [];
+
+    const recentOrders = ordersData?.data || [];
+    const pendingProducts = pendingProductsData?.data || [];
+    const recentUsers = usersData?.data || [];
 
     return (
         <div className="space-y-6 pb-12">
@@ -284,11 +306,11 @@ export default function AdminDashboardPage() {
                                 </TableRow>
                             </TableHeader>
                             <TableBody>
-                                {recentOrders.map((order) => (
+                                {recentOrders.map((order: any) => (
                                     <TableRow key={order.id} className="hover:bg-muted/50">
                                         <TableCell className="font-medium text-indigo-600">{order.orderCode}</TableCell>
-                                        <TableCell>{order.buyer}</TableCell>
-                                        <TableCell className="font-semibold">{formatCurrency(order.total)}</TableCell>
+                                        <TableCell>{order.buyer?.username || 'Guest'}</TableCell>
+                                        <TableCell className="font-semibold">{formatCurrency(order.totalAmount)}</TableCell>
                                         <TableCell>
                                             <StatusBadge status={order.status} configMap={ORDER_STATUS_CONFIG} />
                                         </TableCell>
@@ -324,11 +346,11 @@ export default function AdminDashboardPage() {
                             </Link>
                         </CardHeader>
                         <CardContent className="space-y-3">
-                            {pendingProducts.map((product) => (
+                            {pendingProducts.map((product: any) => (
                                 <div key={product.id} className="flex items-start justify-between gap-3 rounded-lg bg-muted/50 p-3">
                                     <div className="min-w-0 flex-1">
                                         <p className="truncate text-sm font-medium">{product.name}</p>
-                                        <p className="text-xs text-muted-foreground">{product.seller}</p>
+                                        <p className="text-xs text-muted-foreground">{product.seller?.username || 'Unknown Shop'}</p>
                                     </div>
                                     <div className="text-right shrink-0">
                                         <p className="text-sm font-semibold text-emerald-600">{formatCurrency(product.price)}</p>
@@ -355,10 +377,10 @@ export default function AdminDashboardPage() {
                             </Link>
                         </CardHeader>
                         <CardContent className="space-y-3">
-                            {recentUsers.map((user) => (
+                            {recentUsers.map((user: any) => (
                                 <div key={user.id} className="flex items-center gap-3 rounded-lg bg-muted/50 p-3">
                                     <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-gradient-to-br from-indigo-500 to-violet-600 text-xs font-bold text-white">
-                                        {user.username.slice(0, 2).toUpperCase()}
+                                        {(user.username || 'U').slice(0, 2).toUpperCase()}
                                     </div>
                                     <div className="min-w-0 flex-1">
                                         <p className="truncate text-sm font-medium">{user.username}</p>

@@ -2,19 +2,24 @@ import api from './api';
 import type { Order, OrderStatus } from '@/types';
 
 export interface PlaceOrderRequest {
-    shippingAddress: string;
+    addressId: string;
     paymentMethod: string;
     items: { productId: string; quantity: number }[];
 }
 
 export const ordersService = {
+    // ─── Admin APIs ──────────────────────────────────────────────────────
+    getAll: async (params?: any): Promise<any> => {
+        return api.get('/orders/admin/all', { params });
+    },
+
     // ─── Buyer APIs ──────────────────────────────────────────────────────
     placeOrder: async (data: PlaceOrderRequest): Promise<Order> => {
         return api.post('/orders', data);
     },
 
-    getMyOrders: async (): Promise<Order[]> => {
-        return api.get('/orders');
+    getMyOrders: async (params?: any): Promise<any> => {
+        return api.get('/orders', { params });
     },
 
     getById: async (id: string): Promise<Order> => {

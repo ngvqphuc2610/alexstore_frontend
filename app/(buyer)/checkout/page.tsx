@@ -16,8 +16,10 @@ import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { cartService } from '@/services/cart.service';
 import { ordersService } from '@/services/orders.service';
 import { usersService } from '@/services/users.service';
+import { addressService } from '@/services/address.service';
 import { toast } from 'sonner';
 import type { CartItem } from '@/types';
+import type { Address } from '@/types/address.types';
 
 const getImageUrl = (url: string) => {
     if (!url) return '';
@@ -58,9 +60,8 @@ const PAYMENT_METHODS = [
 export default function CheckoutPage() {
     const router = useRouter();
     const queryClient = useQueryClient();
-    const [shippingAddress, setShippingAddress] = useState('');
+    const [selectedAddressId, setSelectedAddressId] = useState<string>('');
     const [paymentMethod, setPaymentMethod] = useState('COD');
-    const [addressLoaded, setAddressLoaded] = useState(false);
 
     // Fetch cart
     const { data: cart, isLoading: cartLoading } = useQuery({
@@ -74,15 +75,23 @@ export default function CheckoutPage() {
         queryFn: usersService.getProfile,
     });
 
-    // Pre-fill address from profile
+    // Fetch user addresses
+    const { data: addresses = [], isLoading: addressesLoading } = useQuery({
+        queryKey: ['addresses'],
+        queryFn: () => addressService.getAll()
+    });
+
+    // Pre-select default address
     useEffect(() => {
-        if (profile && !addressLoaded) {
-            if (profile.address) {
-                setShippingAddress(profile.address);
+        if (addresses.length > 0 && !selectedAddressId) {
+            const defaultAddress = addresses.find(a => a.isDefault);
+            if (defaultAddress) {
+                setSelectedAddressId(defaultAddress.id);
+            } else {
+                setSelectedAddressId(addresses[0].id);
             }
-            setAddressLoaded(true);
         }
-    }, [profile, addressLoaded]);
+    }, [addresses, selectedAddressId]);
 
     const items: CartItem[] = cart?.items || [];
     const subtotal = useMemo(
@@ -95,18 +104,13 @@ export default function CheckoutPage() {
     // Place order mutation
     const placeOrderMutation = useMutation({
         mutationFn: async () => {
-            if (!shippingAddress.trim()) {
-                throw new Error('Vui lòng nhập địa chỉ giao hàng');
-            }
-
-            // Save address to profile if it's new or changed
-            if (profile && profile.address !== shippingAddress.trim()) {
-                await usersService.updateProfile({ address: shippingAddress.trim() });
+            if (!selectedAddressId) {
+                throw new Error('Vui lòng chọn địa chỉ giao hàng');
             }
 
             // Place the order
             return ordersService.placeOrder({
-                shippingAddress: shippingAddress.trim(),
+                addressId: selectedAddressId,
                 paymentMethod,
                 items: items.map(item => ({
                     productId: item.product.id,
@@ -146,7 +150,7 @@ export default function CheckoutPage() {
         },
     });
 
-    const isLoading = cartLoading || profileLoading;
+    const isLoading = cartLoading || profileLoading || addressesLoading;
 
     if (isLoading) {
         return (
@@ -202,30 +206,69 @@ export default function CheckoutPage() {
                         {/* Shipping Address */}
                         <Card className="border border-gray-100 shadow-sm">
                             <CardContent className="p-6">
-                                <h2 className="text-lg font-bold text-gray-900 mb-1 flex items-center gap-2">
-                                    <MapPin className="h-5 w-5 text-primary" />
-                                    Địa chỉ giao hàng
-                                </h2>
-                                {profile?.address && (
-                                    <p className="text-xs text-gray-400 mb-4">Đã tải địa chỉ từ hồ sơ của bạn. Bạn có thể chỉnh sửa.</p>
+                                <div className="flex items-center justify-between mb-4">
+                                    <h2 className="text-lg font-bold text-gray-900 flex items-center gap-2">
+                                        <MapPin className="h-5 w-5 text-primary" />
+                                        Địa chỉ giao hàng
+                                    </h2>
+                                    <Button variant="outline" size="sm" asChild>
+                                        <Link href="/profile/addresses">Quản lý địa chỉ</Link>
+                                    </Button>
+                                </div>
+                                
+                                {addresses.length === 0 ? (
+                                    <div className="text-center py-6 bg-gray-50 rounded-xl border border-dashed border-gray-200">
+                                        <p className="text-sm text-gray-500 mb-3">Bạn chưa có địa chỉ giao hàng nào.</p>
+                                        <Button asChild size="sm">
+                                            <Link href="/profile/addresses">Thêm địa chỉ ngay</Link>
+                                        </Button>
+                                    </div>
+                                ) : (
+                                    <div className="space-y-3">
+                                        {addresses.map((addr) => (
+                                            <div 
+                                                key={addr.id}
+                                                onClick={() => setSelectedAddressId(addr.id)}
+                                                className={`p-4 rounded-xl border-2 cursor-pointer transition-all ${
+                                                    selectedAddressId === addr.id 
+                                                        ? 'border-indigo-600 bg-indigo-50/50' 
+                                                        : 'border-gray-100 hover:border-indigo-200'
+                                                }`}
+                                            >
+                                                <div className="flex items-start gap-3">
+                                                    <div className={`mt-1 h-4 w-4 rounded-full border flex items-center justify-center shrink-0 ${
+                                                        selectedAddressId === addr.id ? 'border-indigo-600 bg-indigo-600' : 'border-gray-300'
+                                                    }`}>
+                                                        {selectedAddressId === addr.id && <div className="h-1.5 w-1.5 bg-white rounded-full" />}
+                                                    </div>
+                                                    <div className="flex-1 min-w-0">
+                                                        <div className="flex items-center gap-2 mb-1">
+                                                            <span className="font-semibold text-gray-900">{addr.fullName}</span>
+                                                            <div className="w-px h-3 bg-gray-300"></div>
+                                                            <span className="text-gray-600 text-sm">{addr.phoneNumber}</span>
+                                                            {addr.isDefault && (
+                                                                <Badge variant="outline" className="ml-2 text-indigo-600 bg-indigo-50 border-indigo-200 text-[10px] h-5 px-1.5">
+                                                                    Mặc định
+                                                                </Badge>
+                                                            )}
+                                                        </div>
+                                                        <p className="text-sm text-gray-600 truncate">{addr.addressLine}, {addr.ward}</p>
+                                                        <p className="text-sm text-gray-600 truncate">{addr.district}, {addr.province}</p>
+                                                    </div>
+                                                </div>
+                                            </div>
+                                        ))}
+                                    </div>
                                 )}
-                                {!profile?.address && (
-                                    <p className="text-xs text-gray-400 mb-4">Bạn chưa có địa chỉ giao hàng. Nhập địa chỉ bên dưới, sẽ được lưu cho lần sau.</p>
-                                )}
-                                <textarea
-                                    value={shippingAddress}
-                                    onChange={(e) => setShippingAddress(e.target.value)}
-                                    placeholder="Nhập địa chỉ giao hàng đầy đủ (Số nhà, đường, phường/xã, quận/huyện, tỉnh/thành phố)"
-                                    className="w-full border border-gray-200 rounded-xl p-4 text-sm min-h-[100px] resize-none focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary transition-all"
-                                    rows={3}
-                                />
-                                {!shippingAddress.trim() && (
-                                    <p className="text-xs text-red-500 mt-2 flex items-center gap-1">
-                                        <span>⚠️</span> Vui lòng nhập địa chỉ giao hàng
+                                
+                                {!selectedAddressId && addresses.length > 0 && (
+                                    <p className="text-xs text-red-500 mt-3 flex items-center gap-1">
+                                        <span>⚠️</span> Vui lòng chọn địa chỉ giao hàng
                                     </p>
                                 )}
                             </CardContent>
                         </Card>
+
 
                         {/* Payment Method */}
                         <Card className="border border-gray-100 shadow-sm">
@@ -372,7 +415,7 @@ export default function CheckoutPage() {
                                 <Button
                                     size="lg"
                                     className="w-full h-12 text-base font-semibold shadow-lg shadow-primary/20"
-                                    disabled={!shippingAddress.trim() || placeOrderMutation.isPending}
+                                    disabled={!selectedAddressId || placeOrderMutation.isPending}
                                     onClick={() => placeOrderMutation.mutate()}
                                 >
                                     {placeOrderMutation.isPending ? (

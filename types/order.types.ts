@@ -11,6 +11,7 @@ export interface OrderItem {
         id: string;
         name: string;
         images?: { imageUrl: string; isPrimary: boolean }[];
+        seller?: { username: string };
     };
 }
 
