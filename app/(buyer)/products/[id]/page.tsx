@@ -11,6 +11,8 @@ import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { productsService } from '@/services/products.service';
 import { cartService } from '@/services/cart.service';
 import { useRecentlyViewedStore } from '@/stores/recentlyViewedStore';
+import { useAuthStore } from '@/stores/authStore';
+import { favoritesService } from '@/services/favorites.service';
 import { toast } from 'sonner';
 
 const getImageUrl = (url: string) => {
@@ -24,6 +26,34 @@ export default function ProductDetailPage({ params }: { params: Promise<{ id: st
     const queryClient = useQueryClient();
     const [quantity, setQuantity] = useState(1);
     const [activeImage, setActiveImage] = useState(0);
+    const { isAuthenticated } = useAuthStore();
+
+    const { data: favorites = [] } = useQuery({
+        queryKey: ['favorites'],
+        queryFn: favoritesService.getFavorites,
+        enabled: isAuthenticated,
+    });
+
+    const isFavorite = favorites.some((fav: any) => fav.productId === resolvedParams.id);
+
+    const toggleFavoriteMutation = useMutation({
+        mutationFn: (productId: string) => isFavorite ? favoritesService.removeFavorite(productId) : favoritesService.addFavorite(productId),
+        onSuccess: () => {
+            queryClient.invalidateQueries({ queryKey: ['favorites'] });
+            toast.success(isFavorite ? 'Đã bỏ yêu thích' : 'Đã thêm vào yêu thích');
+        },
+        onError: () => {
+            toast.error(isAuthenticated ? 'Có lỗi xảy ra' : 'Vui lòng đăng nhập để thêm vào yêu thích');
+        }
+    });
+
+    const handleToggleFavorite = () => {
+        if (!isAuthenticated) {
+            toast.warning('Vui lòng đăng nhập để thêm vào yêu thích');
+            return;
+        }
+        toggleFavoriteMutation.mutate(resolvedParams.id);
+    };
 
     const addToCartMutation = useMutation({
         mutationFn: () => cartService.addItem({ productId: resolvedParams.id, quantity }),
@@ -279,8 +309,19 @@ export default function ProductDetailPage({ params }: { params: Promise<{ id: st
                                     )}
                                     {stockQuantity > 0 ? 'Thêm vào giỏ hàng' : 'Hết Hàng'}
                                 </Button>
-                                <Button size="lg" variant="outline" className="h-12 px-5 hover:bg-red-50 hover:text-red-500 hover:border-red-200 transition-colors">
-                                    <Heart className="h-5 w-5" />
+                                
+                                <Button 
+                                    size="lg" 
+                                    variant="outline" 
+                                    onClick={handleToggleFavorite}
+                                    disabled={toggleFavoriteMutation.isPending}
+                                    className={`h-12 px-5 transition-colors ${
+                                        isFavorite 
+                                            ? 'bg-rose-50 text-rose-500 border-rose-200 hover:bg-rose-100 hover:text-rose-600 hover:border-rose-300' 
+                                            : 'hover:bg-rose-50 hover:text-rose-500 hover:border-rose-200'
+                                    }`}
+                                >
+                                    <Heart className={`h-5 w-5 ${isFavorite ? 'fill-current' : ''}`} />
                                 </Button>
                                 <Button size="lg" variant="outline" className="h-12 px-5 hover:bg-blue-50 hover:text-blue-500 hover:border-blue-200 transition-colors">
                                     <Share2 className="h-5 w-5" />

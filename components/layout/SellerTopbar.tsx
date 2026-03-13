@@ -12,6 +12,7 @@ import {
 } from '@/components/ui/dropdown-menu';
 import { Button } from '@/components/ui/button';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
+import { NotificationDropdown } from './NotificationDropdown';
 
 export function SellerTopbar() {
     const { user, logout } = useAuthStore();
@@ -27,10 +28,10 @@ export function SellerTopbar() {
             </div>
 
             <div className="flex items-center gap-3">
-                <Button variant="ghost" size="icon" className="text-emerald-600 hover:bg-emerald-50 relative">
-                    <Bell className="h-5 w-5" />
-                    <span className="absolute top-2 right-2 h-2 w-2 rounded-full bg-red-500 border-2 border-white" />
-                </Button>
+                <NotificationDropdown 
+                    viewAllHref="/seller/notifications" 
+                    className="text-emerald-600 hover:bg-emerald-50" 
+                />
 
                 <DropdownMenu>
                     <DropdownMenuTrigger asChild>

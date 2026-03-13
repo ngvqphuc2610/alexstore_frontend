@@ -15,8 +15,16 @@ import {
 import { useAuthStore } from '@/stores/authStore';
 import { Button } from '@/components/ui/button';
 import { toast } from 'sonner';
-import { useQuery } from '@tanstack/react-query';
+import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { cartService } from '@/services/cart.service';
+import { notificationsService } from '@/services/notifications.service';
+import {
+    HoverCard,
+    HoverCardContent,
+    HoverCardTrigger,
+} from '@/components/ui/hover-card';
+import { formatDate } from '@/lib/constants';
+import { NotificationDropdown } from './NotificationDropdown';
 
 const NAV_CATEGORIES = [
     { label: 'Flash Deals', href: '/products?sort=discount' },
@@ -99,11 +107,7 @@ export default function BuyerNavbar() {
                     </Link>
 
                     {/* Notifications */}
-                    <Link href="/notifications">
-                        <Button variant="ghost" size="icon" className="relative group">
-                            <Bell className="h-5 w-5 text-gray-600 group-hover:text-primary transition-colors" />
-                        </Button>
-                    </Link>
+                    <NotificationDropdown viewAllHref="/profile/notifications" />
 
                     {/* Support */}
                     <Link href="/support">
