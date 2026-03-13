@@ -157,8 +157,8 @@ export default function AdminOrdersPage() {
                                     <TableCell className="font-medium text-indigo-600">{order.orderCode}</TableCell>
                                     <TableCell>
                                         <div>
-                                            <p className="font-medium">{order.buyer}</p>
-                                            <p className="text-xs text-muted-foreground">{order.buyerEmail}</p>
+                                            <p className="font-medium">{order.buyer?.username || 'Guest'}</p>
+                                            <p className="text-xs text-muted-foreground">{order.buyer?.email || '-'}</p>
                                         </div>
                                     </TableCell>
                                     <TableCell className="font-semibold">{formatCurrency(order.totalAmount)}</TableCell>
@@ -218,11 +218,11 @@ export default function AdminOrdersPage() {
                             <div className="grid grid-cols-2 gap-4 text-sm">
                                 <div>
                                     <p className="text-muted-foreground">Người mua</p>
-                                    <p className="font-medium">{selectedOrder.buyer}</p>
+                                    <p className="font-medium">{selectedOrder.buyer?.username || 'Guest'}</p>
                                 </div>
                                 <div>
                                     <p className="text-muted-foreground">Email</p>
-                                    <p className="font-medium">{selectedOrder.buyerEmail}</p>
+                                    <p className="font-medium">{selectedOrder.buyer?.email || '-'}</p>
                                 </div>
                                 <div>
                                     <p className="text-muted-foreground">Trạng thái</p>

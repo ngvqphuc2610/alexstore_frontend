@@ -30,6 +30,10 @@ export const ordersService = {
         return api.patch(`/orders/${id}/cancel`);
     },
 
+    confirmReceipt: async (id: string): Promise<any> => {
+        return api.patch(`/orders/${id}/confirm`);
+    },
+
     // ─── Seller APIs ─────────────────────────────────────────────────────
     getSellerOrders: async (): Promise<Order[]> => {
         return api.get('/orders/seller/all');

@@ -1,12 +1,27 @@
 import api from './api';
-import type { Review, ReviewFilters, PaginatedResponse } from '@/types';
+
+export interface CreateReviewRequest {
+    productId: string;
+    rating: number;
+    comment?: string;
+}
+
+export interface ReviewResponse {
+    id: number;
+    productId: string;
+    buyerId: string;
+    rating: number;
+    comment: string | null;
+    createdAt: string;
+    buyer?: string;
+}
 
 export const reviewsService = {
-    getAll: async (params?: ReviewFilters): Promise<PaginatedResponse<Review>> => {
-        return api.get('/reviews', { params });
+    getByProduct: async (productId: string, page = 1, limit = 20): Promise<any> => {
+        return api.get('/reviews', { params: { productId, page, limit } });
     },
 
-    delete: async (id: number): Promise<void> => {
-        return api.delete(`/reviews/${id}`);
+    submitReview: async (data: CreateReviewRequest): Promise<ReviewResponse> => {
+        return api.post('/reviews', data);
     },
 };
