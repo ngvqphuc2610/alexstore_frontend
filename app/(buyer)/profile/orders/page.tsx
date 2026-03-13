@@ -11,6 +11,8 @@ import { Search, PackageX, ChevronLeft, ChevronRight, Store } from 'lucide-react
 import { useDebounce } from '@/hooks/useDebounce';
 import { ORDER_STATUS_CONFIG, PAYMENT_STATUS_CONFIG, formatCurrency, formatDate } from '@/lib/constants';
 import { getImageUrl } from '@/lib/utils';
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from '@/components/ui/dialog';
+import { ReviewForm } from '@/components/shared/ReviewForm';
 import Link from 'next/link';
 import { motion } from 'framer-motion';
 import { toast } from 'sonner';
@@ -30,6 +32,11 @@ export default function BuyerOrdersPage() {
     const [search, setSearch] = useState('');
     const debouncedSearch = useDebounce(search, 500);
     const [page, setPage] = useState(1);
+    
+    // Review State
+    const [reviewDialogOpen, setReviewDialogOpen] = useState(false);
+    const [selectedProductId, setSelectedProductId] = useState<string | null>(null);
+
     const queryClient = useQueryClient();
 
     const cancelMutation = useMutation({
@@ -47,6 +54,24 @@ export default function BuyerOrdersPage() {
     const handleCancelOrder = (id: string) => {
         if (window.confirm('Bạn có chắc chắn muốn hủy đơn hàng này không?')) {
             cancelMutation.mutate(id);
+        }
+    };
+
+    const confirmMutation = useMutation({
+        mutationFn: (id: string) => ordersService.confirmReceipt(id),
+        onSuccess: () => {
+            toast.success('Đã xác nhận nhận hàng thành công!');
+            queryClient.invalidateQueries({ queryKey: ['my-orders'] });
+        },
+        onError: (err: any) => {
+            const message = err?.response?.data?.message || err.message || 'Lỗi khi xác nhận nhận hàng';
+            toast.error(message);
+        }
+    });
+
+    const handleConfirmReceipt = (id: string) => {
+        if (window.confirm('Bạn xác nhận đã nhận được hàng?')) {
+            confirmMutation.mutate(id);
         }
     };
 
@@ -159,7 +184,33 @@ export default function BuyerOrdersPage() {
                                                             <p className="text-indigo-600 font-medium whitespace-nowrap">{formatCurrency(item.priceAtPurchase)}</p>
                                                         </div>
                                                     </div>
-                                                    <p className="text-sm text-gray-500">x{item.quantity}</p>
+                                                    <div className="flex justify-between items-end mt-2">
+                                                        <p className="text-sm text-gray-500">x{item.quantity}</p>
+                                                        {order.status === 'DELIVERED' && (
+                                                            item.hasReviewed ? (
+                                                                <Button
+                                                                    variant="outline"
+                                                                    size="sm"
+                                                                    className="text-gray-500 border-gray-200 cursor-default"
+                                                                    disabled
+                                                                >
+                                                                    Đã đánh giá
+                                                                </Button>
+                                                            ) : (
+                                                                <Button
+                                                                    variant="outline"
+                                                                    size="sm"
+                                                                    className="text-indigo-600 border-indigo-200 hover:bg-indigo-50"
+                                                                    onClick={() => {
+                                                                        setSelectedProductId(item.productId || '');
+                                                                        setReviewDialogOpen(true);
+                                                                    }}
+                                                                >
+                                                                    Đánh giá ngay
+                                                                </Button>
+                                                            )
+                                                        )}
+                                                    </div>
                                                 </div>
                                             </div>
                                         ))}
@@ -170,6 +221,15 @@ export default function BuyerOrdersPage() {
                                             <span className="text-xl font-semibold text-indigo-600">{formatCurrency(order.totalAmount)}</span>
                                         </div>
                                         <div className="flex flex-wrap gap-2">
+                                            {order.status === 'SHIPPING' && (
+                                                <Button 
+                                                    className="bg-indigo-600 hover:bg-indigo-700 font-medium" 
+                                                    onClick={() => handleConfirmReceipt(order.id)}
+                                                    disabled={confirmMutation.isPending}
+                                                >
+                                                    Đã nhận được hàng
+                                                </Button>
+                                            )}
                                             <Link href={`/profile/orders/${order.id}`}>
                                                 <Button variant="outline">Xem chi tiết</Button>
                                             </Link>
@@ -218,6 +278,28 @@ export default function BuyerOrdersPage() {
                     )}
                 </div>
             </div>
+
+            {/* Review Dialog */}
+            <Dialog open={reviewDialogOpen} onOpenChange={setReviewDialogOpen}>
+                <DialogContent className="sm:max-w-md">
+                    <DialogHeader>
+                        <DialogTitle>Đánh giá sản phẩm</DialogTitle>
+                        <DialogDescription>
+                            Chia sẻ trải nghiệm của bạn về sản phẩm để giúp người khác nhé.
+                        </DialogDescription>
+                    </DialogHeader>
+                    {selectedProductId && (
+                        <ReviewForm 
+                            productId={selectedProductId} 
+                            onSuccess={() => {
+                                setReviewDialogOpen(false);
+                                queryClient.invalidateQueries({ queryKey: ['my-orders'] });
+                            }}
+                            onCancel={() => setReviewDialogOpen(false)}
+                        />
+                    )}
+                </DialogContent>
+            </Dialog>
         </ProfileLayout>
     );
 }

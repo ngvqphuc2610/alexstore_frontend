@@ -1,19 +1,43 @@
 'use client';
 
-import React from 'react';
+import React, { useState } from 'react';
 import { useParams, useRouter } from 'next/navigation';
-import { useQuery } from '@tanstack/react-query';
+import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { ordersService } from '@/services/orders.service';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { ArrowLeft, Package, MapPin, CreditCard, Store } from 'lucide-react';
 import { ORDER_STATUS_CONFIG, PAYMENT_STATUS_CONFIG, formatCurrency, formatDate } from '@/lib/constants';
 import { getImageUrl } from '@/lib/utils';
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from '@/components/ui/dialog';
+import { ReviewForm } from '@/components/shared/ReviewForm';
+import { toast } from 'sonner';
 
 export default function OrderDetailsPage() {
     const params = useParams();
     const router = useRouter();
+    const queryClient = useQueryClient();
     const orderId = params.id as string;
+
+    const [reviewDialogOpen, setReviewDialogOpen] = useState(false);
+    const [selectedProductId, setSelectedProductId] = useState<string | null>(null);
+
+    const confirmMutation = useMutation({
+        mutationFn: ordersService.confirmReceipt,
+        onSuccess: () => {
+            toast.success('Đã xác nhận nhận hàng thành công!');
+            queryClient.invalidateQueries({ queryKey: ['order', orderId] });
+        },
+        onError: (err: any) => {
+            toast.error(err.message || 'Lỗi khi xác nhận nhận hàng');
+        }
+    });
+
+    const handleConfirmReceipt = () => {
+        if (confirm('Bạn xác nhận đã nhận được hàng?')) {
+            confirmMutation.mutate(orderId);
+        }
+    };
 
     const { data: order, isLoading, isError } = useQuery({
         queryKey: ['order', orderId],
@@ -52,6 +76,17 @@ export default function OrderDetailsPage() {
                     <span className={`font-medium ${ORDER_STATUS_CONFIG[order.status as keyof typeof ORDER_STATUS_CONFIG]?.color || 'text-gray-600'}`}>
                         {ORDER_STATUS_CONFIG[order.status as keyof typeof ORDER_STATUS_CONFIG]?.label || order.status}
                     </span>
+                    {order.status === 'SHIPPING' && (
+                        <Button 
+                            variant="default" 
+                            className="ml-2 bg-indigo-600 hover:bg-indigo-700 text-white" 
+                            size="sm"
+                            onClick={handleConfirmReceipt}
+                            disabled={confirmMutation.isPending}
+                        >
+                            {confirmMutation.isPending ? 'Đang xử lý...' : 'Đã nhận được hàng'}
+                        </Button>
+                    )}
                 </div>
             </div>
 
@@ -116,7 +151,22 @@ export default function OrderDetailsPage() {
                                     <h4 className="text-base font-medium text-gray-900">{item.product?.name || 'Sản phẩm'}</h4>
                                     <p className="text-gray-900 font-medium whitespace-nowrap">{formatCurrency(item.priceAtPurchase)}</p>
                                 </div>
-                                <p className="text-sm text-gray-500">Số lượng: x{item.quantity}</p>
+                                <div className="flex justify-between items-end mt-2">
+                                    <p className="text-sm text-gray-500">Số lượng: x{item.quantity}</p>
+                                    {order.status === 'DELIVERED' && (
+                                        <Button
+                                            variant="outline"
+                                            size="sm"
+                                            className="text-indigo-600 border-indigo-200 hover:bg-indigo-50"
+                                            onClick={() => {
+                                                setSelectedProductId(item.productId || '');
+                                                setReviewDialogOpen(true);
+                                            }}
+                                        >
+                                            Đánh giá ngay
+                                        </Button>
+                                    )}
+                                </div>
                             </div>
                         </div>
                     ))}
@@ -140,6 +190,25 @@ export default function OrderDetailsPage() {
                     </div>
                 </div>
             </Card>
+
+            {/* Review Dialog */}
+            <Dialog open={reviewDialogOpen} onOpenChange={setReviewDialogOpen}>
+                <DialogContent className="sm:max-w-md">
+                    <DialogHeader>
+                        <DialogTitle>Đánh giá sản phẩm</DialogTitle>
+                        <DialogDescription>
+                            Chia sẻ trải nghiệm của bạn về sản phẩm để giúp người khác nhé.
+                        </DialogDescription>
+                    </DialogHeader>
+                    {selectedProductId && (
+                        <ReviewForm 
+                            productId={selectedProductId} 
+                            onSuccess={() => setReviewDialogOpen(false)}
+                            onCancel={() => setReviewDialogOpen(false)}
+                        />
+                    )}
+                </DialogContent>
+            </Dialog>
         </div>
     );
 }
