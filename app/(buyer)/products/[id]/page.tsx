@@ -10,6 +10,7 @@ import { Separator } from '@/components/ui/separator';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { productsService } from '@/services/products.service';
 import { cartService } from '@/services/cart.service';
+import { useRecentlyViewedStore } from '@/stores/recentlyViewedStore';
 import { toast } from 'sonner';
 
 const getImageUrl = (url: string) => {
@@ -39,6 +40,20 @@ export default function ProductDetailPage({ params }: { params: Promise<{ id: st
         queryKey: ['product', resolvedParams.id],
         queryFn: () => productsService.getById(resolvedParams.id),
     });
+
+    const addItem = useRecentlyViewedStore((state) => state.addItem);
+
+    React.useEffect(() => {
+        if (product) {
+            addItem({
+                id: product.id,
+                name: product.name,
+                price: product.price,
+                imageUrl: product.images?.[0]?.imageUrl || null,
+                categoryId: product.categoryId,
+            });
+        }
+    }, [product, addItem]);
 
     if (isLoading) {
         return (
