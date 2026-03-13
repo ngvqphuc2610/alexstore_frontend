@@ -11,7 +11,6 @@ import { Search, PackageX, ChevronLeft, ChevronRight, Store } from 'lucide-react
 import { useDebounce } from '@/hooks/useDebounce';
 import { ORDER_STATUS_CONFIG, PAYMENT_STATUS_CONFIG, formatCurrency, formatDate } from '@/lib/constants';
 import { getImageUrl } from '@/lib/utils';
-import Image from 'next/image';
 import Link from 'next/link';
 import { motion } from 'framer-motion';
 import { toast } from 'sonner';
@@ -145,8 +144,8 @@ export default function BuyerOrdersPage() {
                                         {order.orderItems?.map((item: any, index: number) => (
                                             <div key={index} className="px-5 py-4 border-b last:border-b-0 flex gap-4 bg-gray-50/30">
                                                 <div className="h-20 w-20 flex-shrink-0 rounded-md border bg-white overflow-hidden relative">
-                                                    {item.product?.images?.[0]?.url ? (
-                                                        <Image src={getImageUrl(item.product.images[0].url)} alt={item.product.name} fill className="object-cover" />
+                                                    {item.product?.images?.[0]?.imageUrl ? (
+                                                        <img src={getImageUrl(item.product.images[0].imageUrl)} alt={item.product.name} className="object-cover w-full h-full" />
                                                     ) : (
                                                         <div className="w-full h-full bg-gray-100 flex items-center justify-center">
                                                             <PackageX className="h-6 w-6 text-gray-400" />

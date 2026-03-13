@@ -9,7 +9,6 @@ import { Button } from '@/components/ui/button';
 import { ArrowLeft, Package, MapPin, CreditCard, Store } from 'lucide-react';
 import { ORDER_STATUS_CONFIG, PAYMENT_STATUS_CONFIG, formatCurrency, formatDate } from '@/lib/constants';
 import { getImageUrl } from '@/lib/utils';
-import Image from 'next/image';
 
 export default function OrderDetailsPage() {
     const params = useParams();
@@ -104,8 +103,8 @@ export default function OrderDetailsPage() {
                     {order.orderItems?.map((item: any, index: number) => (
                         <div key={index} className="px-6 py-5 border-b last:border-b-0 flex gap-4">
                             <div className="h-24 w-24 flex-shrink-0 rounded-md border bg-white overflow-hidden relative">
-                                {item.product?.images?.[0]?.url ? (
-                                    <Image src={getImageUrl(item.product.images[0].url)} alt={item.product?.name || 'Sản phẩm'} fill className="object-cover" />
+                                {item.product?.images?.[0]?.imageUrl ? (
+                                    <img src={getImageUrl(item.product.images[0].imageUrl)} alt={item.product?.name || 'Sản phẩm'} className="object-cover w-full h-full" />
                                 ) : (
                                     <div className="w-full h-full bg-gray-100 flex items-center justify-center">
                                         <Package className="h-8 w-8 text-gray-400" />

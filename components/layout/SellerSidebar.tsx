@@ -11,6 +11,7 @@ import {
     ChevronLeft,
     ChevronRight,
     Store,
+    Bell,
     LifeBuoy,
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
@@ -28,6 +29,7 @@ const navItems = [
     { href: '/seller/dashboard', label: 'Tổng quan', icon: LayoutDashboard },
     { href: '/seller/products', label: 'Sản phẩm của tôi', icon: Package },
     { href: '/seller/orders', label: 'Đơn hàng', icon: ShoppingCart },
+    { href: '/seller/notifications', label: 'Thông báo', icon: Bell },
     { href: '/seller/support', label: 'Hỗ trợ admin', icon: LifeBuoy },
 ];
 

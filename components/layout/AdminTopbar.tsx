@@ -16,6 +16,7 @@ import {
 } from '@/components/ui/dropdown-menu';
 import { Badge } from '@/components/ui/badge';
 import { ShieldCheck, User, LogOut, Settings } from 'lucide-react';
+import { NotificationDropdown } from './NotificationDropdown';
 
 export function AdminTopbar() {
     const user = useAuthStore((s) => s.user);
@@ -50,12 +51,7 @@ export function AdminTopbar() {
 
             <div className="flex items-center gap-3 ml-auto">
                 {/* Notifications */}
-                <Button variant="ghost" size="icon" className="relative">
-                    <Bell className="h-5 w-5 text-muted-foreground" />
-                    <span className="absolute -top-0.5 -right-0.5 flex h-4 w-4 items-center justify-center rounded-full bg-red-500 text-[10px] font-bold text-white">
-                        3
-                    </span>
-                </Button>
+                <NotificationDropdown viewAllHref="/admin/notifications" />
 
                 {/* User menu */}
                 <DropdownMenu>

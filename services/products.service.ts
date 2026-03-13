@@ -48,4 +48,9 @@ export const productsService = {
     setPrimaryImage: async (productId: string, imageId: number): Promise<any> => {
         return api.patch(`/products/${productId}/images/${imageId}/primary`);
     },
+
+    getRecommendations: async (categoryIds?: number[]): Promise<{ data: Product[] }> => {
+        const params = categoryIds && categoryIds.length > 0 ? { categoryIds: categoryIds.join(',') } : {};
+        return api.get('/products/recommendations', { params });
+    },
 };
