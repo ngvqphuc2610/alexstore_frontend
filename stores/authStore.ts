@@ -32,6 +32,12 @@ interface AuthState {
     /** Register → calls backend, optionally returns redirect URL or user data */
     register: (data: any) => Promise<void>;
 
+    /** Forgot Password → request OTP */
+    forgotPassword: (email: string) => Promise<void>;
+
+    /** Reset Password → verify OTP and set new password */
+    resetPassword: (data: any) => Promise<void>;
+
     /** Get the dashboard URL for the current user's role */
     getDashboardUrl: () => string;
 }
@@ -98,7 +104,7 @@ export const useAuthStore = create<AuthState>()((set, get) => ({
         const res = await fetch('/api/auth/register', {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify(data),
+            body: JSON.stringify({ ...data, role: 'BUYER' }), // Force role BUYER
         });
 
         if (!res.ok) {
@@ -110,6 +116,32 @@ export const useAuthStore = create<AuthState>()((set, get) => ({
         // Optionally auto-login if backend returns user/token
         if (result.user) {
             set({ user: result.user, isAuthenticated: true, isLoading: false, isInitialized: true });
+        }
+    },
+
+    forgotPassword: async (email: string) => {
+        const res = await fetch('/api/auth/forgot-password', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ email }),
+        });
+
+        if (!res.ok) {
+            const error = await res.json();
+            throw new Error(error.message || 'Yêu cầu OTP thất bại');
+        }
+    },
+
+    resetPassword: async (data: any) => {
+        const res = await fetch('/api/auth/reset-password', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify(data),
+        });
+
+        if (!res.ok) {
+            const error = await res.json();
+            throw new Error(error.message || 'Đặt lại mật khẩu thất bại');
         }
     },
 

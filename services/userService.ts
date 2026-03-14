@@ -127,4 +127,14 @@ export const userService = {
         }
         return res.json();
     },
+
+    /** Get pending seller requests (Admin) */
+    async getPendingSellers(page = 1, limit = 20) {
+        const res = await fetch(`/api/proxy/users/pending-sellers?page=${page}&limit=${limit}`);
+        if (!res.ok) {
+            const error = await res.json();
+            throw new Error(error.message || 'Không thể lấy danh sách yêu cầu');
+        }
+        return res.json();
+    },
 };

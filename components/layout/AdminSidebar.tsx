@@ -32,6 +32,7 @@ const analyticsItems = [
 
 const managementItems = [
     { href: '/admin/users', label: 'Người dùng', icon: Users },
+    { href: '/admin/seller-requests', label: 'Duyệt Seller', icon: ShieldCheck },
     { href: '/admin/products', label: 'Sản phẩm', icon: Package },
     { href: '/admin/categories', label: 'Danh mục', icon: FolderTree },
     { href: '/admin/orders', label: 'Đơn hàng', icon: ShoppingCart },

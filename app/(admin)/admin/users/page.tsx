@@ -220,10 +220,13 @@ export default function AdminUsersPage() {
         banned: users.filter((u: User) => u.status === 'BANNED').length,
     };
 
-    // ─── Helpers ─────────────────────────────────────────────────────────────
+    /**
+     * Determines the seller verification status for a given user.
+     * Note: A user with role BUYER might have a pending seller application.
+     */
     const getVerificationStatus = (user: User): SellerVerificationStatus | null => {
-        if (user.role !== 'SELLER') return null;
-        return (user.sellerProfile as any)?.verificationStatus ?? 'PENDING';
+        if (!user.sellerProfile) return null;
+        return user.sellerProfile.verificationStatus as SellerVerificationStatus;
     };
 
     return (
@@ -341,6 +344,7 @@ export default function AdminUsersPage() {
                                     const vStatus = getVerificationStatus(user);
                                     const vConfig = vStatus ? VERIFICATION_STATUS_CONFIG[vStatus] : null;
                                     const sConfig = USER_STATUS_CONFIG[(user.status as UserStatus)] ?? USER_STATUS_CONFIG.ACTIVE;
+                                    const verificationStatus = getVerificationStatus(user); // Re-using for the new dropdown logic
 
                                     return (
                                         <TableRow key={user.id} className="hover:bg-muted/50">
@@ -424,23 +428,23 @@ export default function AdminUsersPage() {
                                                         )}
 
                                                         {/* Seller Verification */}
-                                                        {user.role === 'SELLER' && vStatus !== 'APPROVED' && (
-                                                            <DropdownMenuItem
-                                                                className="text-emerald-600"
-                                                                onClick={() => approveMutation.mutate(user.id)}
-                                                                disabled={approveMutation.isPending}
-                                                            >
-                                                                <ShieldCheck className="mr-2 h-4 w-4" /> Duyệt Seller
-                                                            </DropdownMenuItem>
-                                                        )}
-                                                        {user.role === 'SELLER' && vStatus !== 'REJECTED' && (
-                                                            <DropdownMenuItem
-                                                                className="text-red-600"
-                                                                onClick={() => rejectMutation.mutate(user.id)}
-                                                                disabled={rejectMutation.isPending}
-                                                            >
-                                                                <ShieldBan className="mr-2 h-4 w-4" /> Từ chối Seller
-                                                            </DropdownMenuItem>
+                                                        {verificationStatus === 'PENDING' && (
+                                                            <>
+                                                                <DropdownMenuItem
+                                                                    className="text-emerald-600"
+                                                                    onClick={() => approveMutation.mutate(user.id)}
+                                                                    disabled={approveMutation.isPending}
+                                                                >
+                                                                    <ShieldCheck className="mr-2 h-4 w-4" /> Duyệt Seller
+                                                                </DropdownMenuItem>
+                                                                <DropdownMenuItem
+                                                                    className="text-red-600"
+                                                                    onClick={() => rejectMutation.mutate(user.id)}
+                                                                    disabled={rejectMutation.isPending}
+                                                                >
+                                                                    <ShieldBan className="mr-2 h-4 w-4" /> Từ chối Seller
+                                                                </DropdownMenuItem>
+                                                            </>
                                                         )}
 
                                                         <DropdownMenuSeparator />
