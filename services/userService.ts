@@ -68,5 +68,63 @@ export const userService = {
             const error = await res.json();
             throw new Error(error.message || 'Không thể xóa người dùng');
         }
-    }
+    },
+
+    /** Ban a user */
+    async banUser(id: string): Promise<void> {
+        const res = await fetch(`/api/proxy/users/${id}/ban`, {
+            method: 'PATCH',
+        });
+        if (!res.ok) {
+            const error = await res.json();
+            throw new Error(error.message || 'Không thể khóa người dùng');
+        }
+    },
+
+    /** Unban a user */
+    async unbanUser(id: string): Promise<void> {
+        const res = await fetch(`/api/proxy/users/${id}/unban`, {
+            method: 'PATCH',
+        });
+        if (!res.ok) {
+            const error = await res.json();
+            throw new Error(error.message || 'Không thể mở khóa người dùng');
+        }
+    },
+
+    /** Approve a seller */
+    async approveSeller(id: string): Promise<void> {
+        const res = await fetch(`/api/proxy/users/${id}/approve-seller`, {
+            method: 'PATCH',
+        });
+        if (!res.ok) {
+            const error = await res.json();
+            throw new Error(error.message || 'Không thể duyệt người bán');
+        }
+    },
+
+    /** Reject a seller */
+    async rejectSeller(id: string): Promise<void> {
+        const res = await fetch(`/api/proxy/users/${id}/reject-seller`, {
+            method: 'PATCH',
+        });
+        if (!res.ok) {
+            const error = await res.json();
+            throw new Error(error.message || 'Không thể từ chối người bán');
+        }
+    },
+
+    /** Register as a seller (buyer submits application) */
+    async registerSeller(data: { shopName: string; taxCode?: string; pickupAddress?: string }): Promise<any> {
+        const res = await fetch('/api/proxy/users/seller/register', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify(data),
+        });
+        if (!res.ok) {
+            const error = await res.json();
+            throw new Error(error.message || 'Không thể đăng ký người bán');
+        }
+        return res.json();
+    },
 };

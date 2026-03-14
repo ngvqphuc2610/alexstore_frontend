@@ -6,12 +6,18 @@ import {
     Search,
     MoreHorizontal,
     ShieldCheck,
+    ShieldBan,
+    ShieldAlert,
     UserCog,
     Trash2,
     Eye,
     Filter,
     Plus,
     Loader2,
+    CheckCircle2,
+    XCircle,
+    Ban,
+    Unlock,
 } from 'lucide-react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
@@ -51,21 +57,36 @@ import {
 import { Label } from '@/components/ui/label';
 import { StatusBadge } from '@/components/shared/StatusBadge';
 import { ROLE_CONFIG, formatDate } from '@/lib/constants';
-import type { User, Role } from '@/types';
+import type { User, Role, UserStatus, SellerVerificationStatus } from '@/types';
 import { Skeleton } from '@/components/ui/skeleton';
 import { userService } from '@/services/userService';
 import { toast } from 'sonner';
 import { CopyableId } from '@/components/shared/CopyableId';
 
+// ─── Status Config ─────────────────────────────────────────────────────────
+const USER_STATUS_CONFIG: Record<UserStatus, { label: string; color: string; icon: React.ReactNode }> = {
+    ACTIVE: { label: 'Hoạt động', color: 'border-emerald-200 bg-emerald-50 text-emerald-700 dark:border-emerald-800 dark:bg-emerald-900/30 dark:text-emerald-400', icon: <CheckCircle2 className="h-3.5 w-3.5" /> },
+    BANNED: { label: 'Bị khóa', color: 'border-red-200 bg-red-50 text-red-700 dark:border-red-800 dark:bg-red-900/30 dark:text-red-400', icon: <Ban className="h-3.5 w-3.5" /> },
+    DELETED: { label: 'Đã xóa', color: 'border-gray-200 bg-gray-50 text-gray-500 dark:border-gray-700 dark:bg-gray-800/30 dark:text-gray-400', icon: <XCircle className="h-3.5 w-3.5" /> },
+};
+
+const VERIFICATION_STATUS_CONFIG: Record<SellerVerificationStatus, { label: string; color: string; icon: React.ReactNode }> = {
+    PENDING: { label: 'Chờ duyệt', color: 'text-amber-600', icon: <ShieldAlert className="h-4 w-4" /> },
+    APPROVED: { label: 'Đã duyệt', color: 'text-emerald-600', icon: <ShieldCheck className="h-4 w-4" /> },
+    REJECTED: { label: 'Bị từ chối', color: 'text-red-600', icon: <ShieldBan className="h-4 w-4" /> },
+};
+
 export default function AdminUsersPage() {
     const queryClient = useQueryClient();
     const [search, setSearch] = useState('');
     const [roleFilter, setRoleFilter] = useState<string>('all');
+    const [statusFilter, setStatusFilter] = useState<string>('all');
 
     // Dialog states
     const [createDialogOpen, setCreateDialogOpen] = useState(false);
     const [editDialogOpen, setEditDialogOpen] = useState(false);
     const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
+    const [banDialogOpen, setBanDialogOpen] = useState(false);
     const [selectedUser, setSelectedUser] = useState<User | null>(null);
 
     // Form states for Create/Edit
@@ -81,6 +102,7 @@ export default function AdminUsersPage() {
     const { data: users = [], isLoading, isError } = useQuery({
         queryKey: ['users'],
         queryFn: userService.getAllUsers,
+        select: (data: any) => Array.isArray(data) ? data : (data?.data ?? []),
     });
 
     // ─── Mutations ───────────────────────────────────────────────────────────
@@ -111,6 +133,43 @@ export default function AdminUsersPage() {
             queryClient.invalidateQueries({ queryKey: ['users'] });
             setDeleteDialogOpen(false);
             toast.success('Đã vô hiệu hóa tài khoản');
+        },
+        onError: (error: any) => toast.error(error.message),
+    });
+
+    const banMutation = useMutation({
+        mutationFn: userService.banUser,
+        onSuccess: () => {
+            queryClient.invalidateQueries({ queryKey: ['users'] });
+            setBanDialogOpen(false);
+            toast.success('Đã khóa tài khoản');
+        },
+        onError: (error: any) => toast.error(error.message),
+    });
+
+    const unbanMutation = useMutation({
+        mutationFn: userService.unbanUser,
+        onSuccess: () => {
+            queryClient.invalidateQueries({ queryKey: ['users'] });
+            toast.success('Đã mở khóa tài khoản');
+        },
+        onError: (error: any) => toast.error(error.message),
+    });
+
+    const approveMutation = useMutation({
+        mutationFn: userService.approveSeller,
+        onSuccess: () => {
+            queryClient.invalidateQueries({ queryKey: ['users'] });
+            toast.success('Đã duyệt người bán');
+        },
+        onError: (error: any) => toast.error(error.message),
+    });
+
+    const rejectMutation = useMutation({
+        mutationFn: userService.rejectSeller,
+        onSuccess: () => {
+            queryClient.invalidateQueries({ queryKey: ['users'] });
+            toast.success('Đã từ chối người bán');
         },
         onError: (error: any) => toast.error(error.message),
     });
@@ -149,14 +208,22 @@ export default function AdminUsersPage() {
             user.username.toLowerCase().includes(search.toLowerCase()) ||
             user.email.toLowerCase().includes(search.toLowerCase());
         const matchesRole = roleFilter === 'all' || user.role === roleFilter;
-        return matchesSearch && matchesRole;
+        const matchesStatus = statusFilter === 'all' || user.status === statusFilter;
+        return matchesSearch && matchesRole && matchesStatus;
     });
 
     const stats = {
         total: users.length,
-        buyers: users.filter(u => u.role === 'BUYER').length,
-        sellers: users.filter(u => u.role === 'SELLER').length,
-        deleted: users.filter(u => u.isDeleted).length
+        buyers: users.filter((u: User) => u.role === 'BUYER').length,
+        sellers: users.filter((u: User) => u.role === 'SELLER').length,
+        admins: users.filter((u: User) => u.role === 'ADMIN').length,
+        banned: users.filter((u: User) => u.status === 'BANNED').length,
+    };
+
+    // ─── Helpers ─────────────────────────────────────────────────────────────
+    const getVerificationStatus = (user: User): SellerVerificationStatus | null => {
+        if (user.role !== 'SELLER') return null;
+        return (user.sellerProfile as any)?.verificationStatus ?? 'PENDING';
     };
 
     return (
@@ -173,7 +240,7 @@ export default function AdminUsersPage() {
             </div>
 
             {/* Stats */}
-            <div className="grid gap-4 md:grid-cols-4">
+            <div className="grid gap-4 md:grid-cols-5">
                 <Card className="border-0 shadow-sm">
                     <CardContent className="pt-6">
                         <div className="text-2xl font-bold">{isLoading ? <Skeleton className="h-8 w-12" /> : stats.total}</div>
@@ -194,8 +261,14 @@ export default function AdminUsersPage() {
                 </Card>
                 <Card className="border-0 shadow-sm">
                     <CardContent className="pt-6">
-                        <div className="text-2xl font-bold text-red-600">{isLoading ? <Skeleton className="h-8 w-12" /> : stats.deleted}</div>
-                        <p className="text-xs text-muted-foreground">Đã vô hiệu hóa</p>
+                        <div className="text-2xl font-bold text-violet-600">{isLoading ? <Skeleton className="h-8 w-12" /> : stats.admins}</div>
+                        <p className="text-xs text-muted-foreground">Quản trị viên</p>
+                    </CardContent>
+                </Card>
+                <Card className="border-0 shadow-sm">
+                    <CardContent className="pt-6">
+                        <div className="text-2xl font-bold text-red-600">{isLoading ? <Skeleton className="h-8 w-12" /> : stats.banned}</div>
+                        <p className="text-xs text-muted-foreground">Bị khóa</p>
                     </CardContent>
                 </Card>
             </div>
@@ -225,6 +298,18 @@ export default function AdminUsersPage() {
                                 <SelectItem value="ADMIN">Admin</SelectItem>
                             </SelectContent>
                         </Select>
+                        <Select value={statusFilter} onValueChange={setStatusFilter}>
+                            <SelectTrigger className="w-full sm:w-[180px]">
+                                <Filter className="mr-2 h-4 w-4" />
+                                <SelectValue placeholder="Lọc theo trạng thái" />
+                            </SelectTrigger>
+                            <SelectContent>
+                                <SelectItem value="all">Tất cả trạng thái</SelectItem>
+                                <SelectItem value="ACTIVE">Hoạt động</SelectItem>
+                                <SelectItem value="BANNED">Bị khóa</SelectItem>
+                                <SelectItem value="DELETED">Đã xóa</SelectItem>
+                            </SelectContent>
+                        </Select>
                     </div>
                 </CardHeader>
                 <CardContent>
@@ -245,93 +330,136 @@ export default function AdminUsersPage() {
                                     <TableHead>Người dùng</TableHead>
                                     <TableHead>Email</TableHead>
                                     <TableHead>Vai trò</TableHead>
-                                    <TableHead>Xác thực</TableHead>
+                                    <TableHead>Xác thực Seller</TableHead>
                                     <TableHead>Trạng thái</TableHead>
                                     <TableHead>Ngày tạo</TableHead>
                                     <TableHead className="text-right">Thao tác</TableHead>
                                 </TableRow>
                             </TableHeader>
                             <TableBody>
-                                {filteredUsers.map((user, index) => (
-                                    <TableRow key={user.id} className="hover:bg-muted/50">
-                                        <TableCell className="font-medium text-muted-foreground">
-                                            #{index + 1}
-                                        </TableCell>
-                                        <TableCell>
-                                            <CopyableId id={user.id} />
-                                        </TableCell>
-                                        <TableCell>
-                                            <div className="flex items-center gap-3">
-                                                <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-gradient-to-br from-indigo-500 to-violet-600 text-xs font-bold text-white">
-                                                    {user.username.slice(0, 2).toUpperCase()}
+                                {filteredUsers.map((user, index) => {
+                                    const vStatus = getVerificationStatus(user);
+                                    const vConfig = vStatus ? VERIFICATION_STATUS_CONFIG[vStatus] : null;
+                                    const sConfig = USER_STATUS_CONFIG[(user.status as UserStatus)] ?? USER_STATUS_CONFIG.ACTIVE;
+
+                                    return (
+                                        <TableRow key={user.id} className="hover:bg-muted/50">
+                                            <TableCell className="font-medium text-muted-foreground">
+                                                #{index + 1}
+                                            </TableCell>
+                                            <TableCell>
+                                                <CopyableId id={user.id} />
+                                            </TableCell>
+                                            <TableCell>
+                                                <div className="flex items-center gap-3">
+                                                    <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-gradient-to-br from-indigo-500 to-violet-600 text-xs font-bold text-white">
+                                                        {user.username.slice(0, 2).toUpperCase()}
+                                                    </div>
+                                                    <span className="font-medium">{user.username}</span>
                                                 </div>
-                                                <span className="font-medium">{user.username}</span>
-                                            </div>
-                                        </TableCell>
-                                        <TableCell className="text-muted-foreground">{user.email}</TableCell>
-                                        <TableCell>
-                                            <StatusBadge status={user.role} configMap={ROLE_CONFIG} />
-                                        </TableCell>
-                                        <TableCell>
-                                            {user.role === 'SELLER' && (
-                                                user.sellerProfile?.isVerified ? (
-                                                    <span className="inline-flex items-center gap-1 text-xs text-emerald-600">
-                                                        <ShieldCheck className="h-4 w-4" /> Đã xác thực
+                                            </TableCell>
+                                            <TableCell className="text-muted-foreground">{user.email}</TableCell>
+                                            <TableCell>
+                                                <StatusBadge status={user.role} configMap={ROLE_CONFIG} />
+                                            </TableCell>
+                                            <TableCell>
+                                                {vConfig ? (
+                                                    <span className={`inline-flex items-center gap-1 text-xs ${vConfig.color}`}>
+                                                        {vConfig.icon} {vConfig.label}
                                                     </span>
                                                 ) : (
-                                                    <span className="text-xs text-amber-600">Chờ xác thực</span>
-                                                )
-                                            )}
-                                            {user.role !== 'SELLER' && <span className="text-xs text-muted-foreground">—</span>}
-                                        </TableCell>
-                                        <TableCell>
-                                            {user.isDeleted ? (
-                                                <Badge variant="destructive" className="text-xs">Đã khóa</Badge>
-                                            ) : (
-                                                <Badge variant="outline" className="border-emerald-200 bg-emerald-50 text-emerald-700 text-xs dark:border-emerald-800 dark:bg-emerald-900/30 dark:text-emerald-400">Active</Badge>
-                                            )}
-                                        </TableCell>
-                                        <TableCell className="text-sm text-muted-foreground">{formatDate(user.createdAt)}</TableCell>
-                                        <TableCell className="text-right">
-                                            <DropdownMenu>
-                                                <DropdownMenuTrigger asChild>
-                                                    <Button variant="ghost" size="icon" className="h-8 w-8">
-                                                        <MoreHorizontal className="h-4 w-4" />
-                                                    </Button>
-                                                </DropdownMenuTrigger>
-                                                <DropdownMenuContent align="end">
-                                                    <DropdownMenuItem>
-                                                        <Eye className="mr-2 h-4 w-4" /> Xem chi tiết
-                                                    </DropdownMenuItem>
-                                                    <DropdownMenuItem onClick={() => {
-                                                        setSelectedUser(user);
-                                                        setFormData({
-                                                            username: user.username,
-                                                            email: user.email,
-                                                            password: '',
-                                                            role: user.role,
-                                                            shopName: user.sellerProfile?.shopName || ''
-                                                        });
-                                                        setEditDialogOpen(true);
-                                                    }}>
-                                                        <UserCog className="mr-2 h-4 w-4" /> Chỉnh sửa
-                                                    </DropdownMenuItem>
-                                                    <DropdownMenuSeparator />
-                                                    <DropdownMenuItem
-                                                        className="text-red-600"
-                                                        onClick={() => { setSelectedUser(user); setDeleteDialogOpen(true); }}
-                                                        disabled={user.isDeleted}
-                                                    >
-                                                        <Trash2 className="mr-2 h-4 w-4" /> Xóa tài khoản
-                                                    </DropdownMenuItem>
-                                                </DropdownMenuContent>
-                                            </DropdownMenu>
-                                        </TableCell>
-                                    </TableRow>
-                                ))}
+                                                    <span className="text-xs text-muted-foreground">—</span>
+                                                )}
+                                            </TableCell>
+                                            <TableCell>
+                                                <Badge variant="outline" className={`text-xs inline-flex items-center gap-1 ${sConfig.color}`}>
+                                                    {sConfig.icon} {sConfig.label}
+                                                </Badge>
+                                            </TableCell>
+                                            <TableCell className="text-sm text-muted-foreground">{formatDate(user.createdAt)}</TableCell>
+                                            <TableCell className="text-right">
+                                                <DropdownMenu>
+                                                    <DropdownMenuTrigger asChild>
+                                                        <Button variant="ghost" size="icon" className="h-8 w-8">
+                                                            <MoreHorizontal className="h-4 w-4" />
+                                                        </Button>
+                                                    </DropdownMenuTrigger>
+                                                    <DropdownMenuContent align="end">
+                                                        <DropdownMenuItem>
+                                                            <Eye className="mr-2 h-4 w-4" /> Xem chi tiết
+                                                        </DropdownMenuItem>
+                                                        <DropdownMenuItem onClick={() => {
+                                                            setSelectedUser(user);
+                                                            setFormData({
+                                                                username: user.username,
+                                                                email: user.email,
+                                                                password: '',
+                                                                role: user.role,
+                                                                shopName: (user.sellerProfile as any)?.shopName || ''
+                                                            });
+                                                            setEditDialogOpen(true);
+                                                        }}>
+                                                            <UserCog className="mr-2 h-4 w-4" /> Chỉnh sửa
+                                                        </DropdownMenuItem>
+
+                                                        <DropdownMenuSeparator />
+
+                                                        {/* Ban / Unban */}
+                                                        {user.status === 'ACTIVE' && user.role !== 'ADMIN' && (
+                                                            <DropdownMenuItem
+                                                                className="text-orange-600"
+                                                                onClick={() => { setSelectedUser(user); setBanDialogOpen(true); }}
+                                                            >
+                                                                <Ban className="mr-2 h-4 w-4" /> Khóa tài khoản
+                                                            </DropdownMenuItem>
+                                                        )}
+                                                        {user.status === 'BANNED' && (
+                                                            <DropdownMenuItem
+                                                                className="text-emerald-600"
+                                                                onClick={() => unbanMutation.mutate(user.id)}
+                                                                disabled={unbanMutation.isPending}
+                                                            >
+                                                                <Unlock className="mr-2 h-4 w-4" /> Mở khóa
+                                                            </DropdownMenuItem>
+                                                        )}
+
+                                                        {/* Seller Verification */}
+                                                        {user.role === 'SELLER' && vStatus !== 'APPROVED' && (
+                                                            <DropdownMenuItem
+                                                                className="text-emerald-600"
+                                                                onClick={() => approveMutation.mutate(user.id)}
+                                                                disabled={approveMutation.isPending}
+                                                            >
+                                                                <ShieldCheck className="mr-2 h-4 w-4" /> Duyệt Seller
+                                                            </DropdownMenuItem>
+                                                        )}
+                                                        {user.role === 'SELLER' && vStatus !== 'REJECTED' && (
+                                                            <DropdownMenuItem
+                                                                className="text-red-600"
+                                                                onClick={() => rejectMutation.mutate(user.id)}
+                                                                disabled={rejectMutation.isPending}
+                                                            >
+                                                                <ShieldBan className="mr-2 h-4 w-4" /> Từ chối Seller
+                                                            </DropdownMenuItem>
+                                                        )}
+
+                                                        <DropdownMenuSeparator />
+                                                        <DropdownMenuItem
+                                                            className="text-red-600"
+                                                            onClick={() => { setSelectedUser(user); setDeleteDialogOpen(true); }}
+                                                            disabled={user.isDeleted || user.status === 'DELETED'}
+                                                        >
+                                                            <Trash2 className="mr-2 h-4 w-4" /> Xóa tài khoản
+                                                        </DropdownMenuItem>
+                                                    </DropdownMenuContent>
+                                                </DropdownMenu>
+                                            </TableCell>
+                                        </TableRow>
+                                    );
+                                })}
                                 {filteredUsers.length === 0 && (
                                     <TableRow>
-                                        <TableCell colSpan={7} className="h-24 text-center">
+                                        <TableCell colSpan={9} className="h-24 text-center">
                                             Không tìm thấy người dùng nào.
                                         </TableCell>
                                     </TableRow>
@@ -475,13 +603,37 @@ export default function AdminUsersPage() {
                 </DialogContent>
             </Dialog>
 
+            {/* Ban Confirm Dialog */}
+            <Dialog open={banDialogOpen} onOpenChange={setBanDialogOpen}>
+                <DialogContent>
+                    <DialogHeader>
+                        <DialogTitle>Xác nhận khóa tài khoản</DialogTitle>
+                        <DialogDescription>
+                            Bạn có chắc muốn khóa tài khoản <span className="font-semibold">{selectedUser?.username}</span>?
+                            Người dùng sẽ không thể đăng nhập cho đến khi được mở khóa.
+                        </DialogDescription>
+                    </DialogHeader>
+                    <DialogFooter>
+                        <Button variant="outline" onClick={() => setBanDialogOpen(false)}>Hủy</Button>
+                        <Button
+                            variant="destructive"
+                            onClick={() => selectedUser && banMutation.mutate(selectedUser.id)}
+                            disabled={banMutation.isPending}
+                        >
+                            {banMutation.isPending && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
+                            Khóa tài khoản
+                        </Button>
+                    </DialogFooter>
+                </DialogContent>
+            </Dialog>
+
             {/* Delete Confirm Dialog */}
             <Dialog open={deleteDialogOpen} onOpenChange={setDeleteDialogOpen}>
                 <DialogContent>
                     <DialogHeader>
-                        <DialogTitle>Xác nhận vô hiệu hóa</DialogTitle>
+                        <DialogTitle>Xác nhận xóa tài khoản</DialogTitle>
                         <DialogDescription>
-                            Bạn có chắc muốn vô hiệu hóa tài khoản <span className="font-semibold">{selectedUser?.username}</span>? Tài khoản sẽ không thể đăng nhập cho đến khi được kích hoạt lại.
+                            Bạn có chắc muốn xóa tài khoản <span className="font-semibold">{selectedUser?.username}</span>? Tài khoản sẽ bị vô hiệu hóa vĩnh viễn.
                         </DialogDescription>
                     </DialogHeader>
                     <DialogFooter>
@@ -492,7 +644,7 @@ export default function AdminUsersPage() {
                             disabled={deleteMutation.isPending}
                         >
                             {deleteMutation.isPending && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
-                            Vô hiệu hóa
+                            Xóa tài khoản
                         </Button>
                     </DialogFooter>
                 </DialogContent>

@@ -1,5 +1,9 @@
 export type Role = 'BUYER' | 'SELLER' | 'ADMIN';
 
+export type UserStatus = 'ACTIVE' | 'BANNED' | 'DELETED';
+
+export type SellerVerificationStatus = 'PENDING' | 'APPROVED' | 'REJECTED';
+
 export type MembershipLevel = 'NORMAL' | 'SILVER' | 'GOLD' | 'VIP';
 
 export type SellerType = 'STANDARD' | 'MALL' | 'PRO';
@@ -15,7 +19,7 @@ export interface BuyerProfile {
 export interface SellerProfile {
     shopName: string;
     sellerType: SellerType;
-    isVerified: boolean;
+    verificationStatus: SellerVerificationStatus;
     taxCode?: string;
     shopRating: number;
     pickupAddress?: string;
@@ -28,6 +32,7 @@ export interface User {
     username: string;
     email: string;
     role: Role;
+    status: UserStatus;
     phoneNumber?: string;
     isDeleted: boolean;
     createdAt: string;
@@ -61,5 +66,4 @@ export interface UpdateUserRequest {
     phoneNumber?: string;
     address?: string;
     role?: Role;
-    isDeleted?: boolean;
 }

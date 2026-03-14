@@ -90,11 +90,11 @@ export default function BuyerNavbar() {
                 {/* Right‑side actions */}
                 <div className="flex items-center gap-1 md:gap-2">
                     {/* Become a Seller — desktop only */}
-                    {!isAuthenticated && (
+                    {(!isAuthenticated || user?.role === 'BUYER') && (
                         <Button asChild variant="outline" size="sm" className="hidden md:flex gap-1.5 mr-2 border-primary text-primary hover:bg-primary hover:text-white">
-                            <Link href="/register?role=seller">
+                            <Link href={isAuthenticated ? '/profile/become-seller' : '/register?role=seller'}>
                                 <Store className="h-4 w-4" />
-                                Become a Seller
+                                Bán hàng cùng AlexStore
                             </Link>
                         </Button>
                     )}
