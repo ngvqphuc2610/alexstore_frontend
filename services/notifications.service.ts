@@ -25,5 +25,17 @@ export const notificationsService = {
 
     markAllAsRead: async () => {
         return api.patch('/notifications/read-all') as any;
+    },
+
+    getEmailLogs: async (page: number = 1, limit: number = 20) => {
+        return api.get(`/notifications/email-logs?page=${page}&limit=${limit}`) as any;
+    },
+
+    getSettings: async () => {
+        return api.get('/notifications/settings') as any;
+    },
+
+    updateSettings: async (data: any) => {
+        return api.patch('/notifications/settings', data) as any;
     }
 };

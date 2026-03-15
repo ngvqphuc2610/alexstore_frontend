@@ -8,8 +8,10 @@ Dựa trên cấu trúc hiện tại của dự án `alexstore`, dưới đây l
 Cung cấp cái nhìn tổng quan về tình hình kinh doanh của gian hàng.
 - [x] **Thống kê nhanh:** Hiển thị doanh thu, tổng số đơn hàng mới, tổng sản phẩm đang bán (Dữ liệu thực từ API).
 - [ ] **Biểu đồ doanh thu:** Trực quan hóa doanh thu theo thời gian.
-- [x] **Thông báo quan trọng:** Báo động sản phẩm sắp hết hàng (Low stock alerts) và hiển thị đơn hàng cần xử lý.
+- [x] **Thông báo quan trọng:** UI cảnh báo sản phẩm sắp hết hàng trên Web.
+- [ ] **Low Stock Email Alerts:** Gắn nhãn hoặc đánh dấu các cảnh báo Low Stock từ Cron Job (0 8 * * *) và Email.
 - [x] **Đơn hàng gần đây:** Danh sách đơn hàng mới nhất rớt vào hệ thống.
+- [ ] **Trạng thái xét duyệt (Registration Status):** Cập nhật giao diện chờ duyệt hoặc bị từ chối dựa theo trạng thái hồ sơ.
 
 ## 2. Quản lý Sản phẩm (Products) - Ưu tiên: Cao *(Đang thực hiện)*
 Cho phép seller thêm, sửa, xóa và quản lý kho hàng.
@@ -40,6 +42,7 @@ Tùy chỉnh thông tin công khai của gian hàng.
 - [ ] **Thông tin gian hàng:** Cập nhật tên Shop, Avatar/Logo, và mô tả ngắn (Bio) của gian hàng.
 - [ ] **Địa chỉ lấy hàng:** Thiết lập số điện thoại và địa chỉ thực tế để đơn vị vận chuyển đến lấy hàng.
 - [ ] **Chính sách riêng:** (Tùy chọn) Chính sách đổi trả hoặc giới thiệu của riêng shop.
+- [ ] **Cài đặt Nhận Email (Notification Settings):** Toggle tắt/mở thông báo đơn hàng mới, low stock alerts qua Email.
 
 ## 6. Hỗ trợ & Phản hồi (Support/Reviews) - Ưu tiên: Thấp
 - [ ] **Quản lý Đánh giá (Reviews):** Xem và phản hồi lại đánh giá của khách hàng về sản phẩm của mình.

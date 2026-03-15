@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 import { Geist, Geist_Mono } from "next/font/google";
 import { QueryProvider } from "@/providers/QueryProvider";
 import { AuthProvider } from "@/providers/AuthProvider";
+import { SocketProvider } from "@/providers/SocketProvider";
 import { Toaster } from "@/components/ui/sonner";
 import "./globals.css";
 
@@ -33,7 +34,9 @@ export default function RootLayout({
       >
         <QueryProvider>
           <AuthProvider>
-            {children}
+            <SocketProvider>
+              {children}
+            </SocketProvider>
             <Toaster richColors position="top-right" />
           </AuthProvider>
         </QueryProvider>

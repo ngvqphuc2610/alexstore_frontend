@@ -55,6 +55,8 @@ const supportSchema = z.object({
 
 type SupportFormValues = z.infer<typeof supportSchema>;
 
+import { supportService } from '@/services/support.service';
+
 export default function SupportPage() {
     const [view, setView] = useState<'form' | 'history'>('form');
 
@@ -69,23 +71,11 @@ export default function SupportPage() {
 
     const { data: myRequests, isLoading: isLoadingHistory, refetch: refetchHistory } = useQuery({
         queryKey: ['support-requests', 'me'],
-        queryFn: async () => {
-            const res = await fetch('/api/proxy/support/me');
-            if (!res.ok) throw new Error('Failed to fetch history');
-            return res.json();
-        },
+        queryFn: () => supportService.getMyRequests(),
     });
 
     const mutation = useMutation({
-        mutationFn: async (values: SupportFormValues) => {
-            const res = await fetch('/api/proxy/support', {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify(values),
-            });
-            if (!res.ok) throw new Error('Không thể gửi yêu cầu');
-            return res.json();
-        },
+        mutationFn: (values: SupportFormValues) => supportService.createRequest(values),
         onSuccess: () => {
             toast.success('Yêu cầu đã được gửi thành công!');
             form.reset();
@@ -143,7 +133,7 @@ export default function SupportPage() {
                         className={view === 'history' ? 'bg-white shadow-sm' : ''}
                     >
                         <History className="h-4 w-4 mr-2" />
-                        Lịch sử ({myRequests?.length || 0})
+                        Lịch sử ({(myRequests as any[])?.length || 0})
                     </Button>
                 </div>
             </div>
@@ -243,7 +233,7 @@ export default function SupportPage() {
                         <div className="flex justify-center py-20">
                             <Loader2 className="h-12 w-12 animate-spin text-primary opacity-20" />
                         </div>
-                    ) : myRequests?.data?.length === 0 ? (
+                    ) : (myRequests as any[])?.length === 0 ? (
                         <Card className="border-dashed border-2 py-20 flex flex-col items-center justify-center text-center">
                             <History className="h-16 w-16 text-gray-200 mb-4" />
                             <h3 className="text-xl font-medium text-gray-900">Chưa có yêu cầu nào</h3>
@@ -255,7 +245,7 @@ export default function SupportPage() {
                             </Button>
                         </Card>
                     ) : (
-                        myRequests?.data?.map((req: any) => (
+                        (myRequests as any[])?.map((req: any) => (
                             <Card key={req.id} className="overflow-hidden border-none shadow-sm hover:shadow-md transition-shadow">
                                 <div className="p-6">
                                     <div className="flex items-start justify-between mb-4">
