@@ -40,8 +40,8 @@ Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/bui
 
 docker-compose -f ../docker-compose.yml up -d
 
-Bull Board: http://localhost:4000/queues
-Redis: redis://localhost:6379
+Bull Board: http://localhost:8080/admin/queues
+Redis: redis://redis:6379
 
 Admin: http://localhost:3000/admin
 

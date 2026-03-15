@@ -20,7 +20,8 @@ import {
     BarChart,
     PieChart,
     LineChart,
-    Box
+    Box,
+    Bell
 } from 'lucide-react';
 
 const analyticsItems = [
@@ -38,6 +39,7 @@ const managementItems = [
     { href: '/admin/orders', label: 'Đơn hàng', icon: ShoppingCart },
     { href: '/admin/reviews', label: 'Đánh giá', icon: Star },
     { href: '/admin/support', label: 'Hỗ trợ & Khiếu nại', icon: LifeBuoy },
+    { href: '/admin/notifications', label: 'Thông báo', icon: Bell },
 ];
 
 import { cn } from '@/lib/utils';

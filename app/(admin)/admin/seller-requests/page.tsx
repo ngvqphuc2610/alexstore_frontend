@@ -54,8 +54,10 @@ export default function AdminSellerRequestsPage() {
         queryFn: () => userService.getPendingSellers(page, limit),
     });
 
+    console.log('DEBUG SellerRequests Response:', response);
+
     const pendingUsers = response?.data || [];
-    const meta = response?.meta || { total: 0, page: 1, limit: 20, totalPages: 1 };
+    const meta = response?.data.meta|| { total: 0, page: 1, limit: 20, totalPages: 1 };
 
     // ─── Mutations ───────────────────────────────────────────────────────────
     const approveMutation = useMutation({

@@ -67,9 +67,9 @@ export default function AdminReviewsPage() {
         queryFn: () => reviewService.getAllReviews(page, limit, search, sortBy),
     });
 
-    const reviews = response?.data || [];
-    const meta = response?.meta || { total: 0, page: 1, limit: 20, totalPages: 1 };
-    const stats = response?.stats || { totalReviews: 0, avgRating: 0, positiveCount: 0 };
+    const reviews = (response as any)?.data || [];
+    const meta = (response as any)?.meta || { total: 0, page: 1, limit: 20, totalPages: 1 };
+    const stats = (response as any)?.stats || { totalReviews: 0, avgRating: 0, positiveCount: 0 };
 
     // ─── Mutations ───────────────────────────────────────────────────────────
     const deleteMutation = useMutation({
