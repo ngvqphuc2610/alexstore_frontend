@@ -22,7 +22,18 @@ export interface Product {
     isDeleted: boolean;
     createdAt: string;
     updatedAt: string;
-    seller?: { id: string; username: string };
+    seller?: {
+        id: string;
+        username: string;
+        createdAt?: string;
+        totalProducts?: number;
+        sellerProfile?: {
+            shopName: string;
+            sellerType: string;
+            verificationStatus: string;
+            shopRating: number;
+        };
+    };
     category?: { id: number; name: string };
     images?: ProductImage[];
 }

@@ -67,3 +67,19 @@ export interface UpdateUserRequest {
     address?: string;
     role?: Role;
 }
+
+export interface SellerPublicProfile {
+    id: string;
+    username: string;
+    shopName: string;
+    sellerType: SellerType;
+    shopRating: number;
+    pickupAddress?: string;
+    createdAt: string;
+    stats: {
+        totalProducts: number;
+        totalReviews: number;
+        rating: number;
+        joinedAt: string;
+    };
+}

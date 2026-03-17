@@ -3,6 +3,7 @@
 import React, { useState, use } from 'react';
 import Link from 'next/link';
 import { ShoppingBag, Star, Share2, Heart, Plus, Minus, ShieldCheck, Truck, ChevronLeft, Package, RotateCcw, MessageSquare, Loader2 } from 'lucide-react';
+import SellerInfoCard from '@/components/buyer/shop/SellerInfoCard';
 import { Button } from '@/components/ui/button';
 import { Card } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
@@ -356,6 +357,13 @@ export default function ProductDetailPage({ params }: { params: Promise<{ id: st
                     </div>
                 </Card>
 
+                {/* Seller Information Card */}
+                {seller && (
+                    <div className="mb-8">
+                        <SellerInfoCard seller={seller} sellerId={(product as any).sellerId} />
+                    </div>
+                )}
+
                 {/* Product Details Section */}
                 <div className="grid grid-cols-1 lg:grid-cols-3 gap-8 mb-8">
                     {/* Description */}
@@ -406,15 +414,15 @@ export default function ProductDetailPage({ params }: { params: Promise<{ id: st
                                 <Separator className="mb-4" />
                                 <div className="flex items-center gap-3 mb-4">
                                     <div className="w-12 h-12 rounded-full bg-primary/10 flex items-center justify-center text-primary font-bold text-lg">
-                                        {seller.username?.charAt(0)?.toUpperCase() || 'S'}
+                                        {(seller.sellerProfile?.shopName || seller.username)?.charAt(0)?.toUpperCase() || 'S'}
                                     </div>
                                     <div>
-                                        <p className="font-semibold text-gray-900">{seller.username}</p>
+                                        <p className="font-semibold text-gray-900">{seller.sellerProfile?.shopName || seller.username}</p>
                                         <p className="text-xs text-gray-500">Người bán trên AlexStore</p>
                                     </div>
                                 </div>
                                 <Button variant="outline" className="w-full" asChild>
-                                    <Link href={`/products?sellerId=${(product as any).sellerId}`}>
+                                    <Link href={`/shop/${(product as any).sellerId}`}>
                                         Xem cửa hàng
                                     </Link>
                                 </Button>

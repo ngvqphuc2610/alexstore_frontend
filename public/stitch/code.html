@@ -1,0 +1,490 @@
+<!DOCTYPE html>
+
+<html lang="en"><head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<script id="tailwind-config">
+      tailwind.config = {
+        darkMode: "class",
+        theme: {
+          extend: {
+            colors: {
+              "primary": "#4850e5",
+              "background-light": "#f6f6f8",
+              "background-dark": "#111221",
+            },
+            fontFamily: {
+              "display": ["Inter"]
+            },
+            borderRadius: {"DEFAULT": "0.25rem", "lg": "0.5rem", "xl": "0.75rem", "full": "9999px"},
+          },
+        },
+      }
+    </script>
+<title>TechHub Official - AlexStore</title>
+</head>
+<body class="font-display bg-background-light dark:bg-background-dark text-slate-900 dark:text-slate-100 antialiased">
+<div class="relative flex min-h-screen flex-col">
+<!-- Sticky Top Navigation -->
+<header class="sticky top-0 z-50 w-full border-b border-slate-200 dark:border-slate-800 bg-white/80 dark:bg-background-dark/80 backdrop-blur-md">
+<div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+<div class="flex h-16 items-center justify-between gap-8">
+<div class="flex items-center gap-8">
+<div class="flex items-center gap-2 text-primary">
+<div class="size-8 flex items-center justify-center bg-primary/10 rounded-lg">
+<span class="material-symbols-outlined">storefront</span>
+</div>
+<h2 class="text-slate-900 dark:text-white text-xl font-bold tracking-tight">AlexStore</h2>
+</div>
+<nav class="hidden md:flex items-center gap-6">
+<a class="text-slate-600 dark:text-slate-300 hover:text-primary transition-colors text-sm font-medium" href="#">Home</a>
+<a class="text-slate-600 dark:text-slate-300 hover:text-primary transition-colors text-sm font-medium" href="#">Categories</a>
+<a class="text-slate-600 dark:text-slate-300 hover:text-primary transition-colors text-sm font-medium" href="#">Deals</a>
+<a class="text-slate-600 dark:text-slate-300 hover:text-primary transition-colors text-sm font-medium" href="#">Orders</a>
+</nav>
+</div>
+<div class="flex flex-1 justify-end items-center gap-4">
+<div class="hidden sm:flex w-full max-w-xs relative">
+<span class="absolute inset-y-0 left-0 flex items-center pl-3 text-slate-400">
+<span class="material-symbols-outlined text-[20px]">search</span>
+</span>
+<input class="block w-full rounded-full border-0 bg-slate-100 dark:bg-slate-800 py-2 pl-10 pr-3 text-sm placeholder-slate-500 focus:ring-2 focus:ring-primary dark:text-white" placeholder="Search store" type="search"/>
+</div>
+<div class="flex items-center gap-2">
+<button class="p-2 rounded-full hover:bg-slate-100 dark:hover:bg-slate-800 text-slate-600 dark:text-slate-300 transition-colors">
+<span class="material-symbols-outlined">shopping_cart</span>
+</button>
+<button class="p-2 rounded-full hover:bg-slate-100 dark:hover:bg-slate-800 text-slate-600 dark:text-slate-300 transition-colors">
+<span class="material-symbols-outlined">notifications</span>
+</button>
+<div class="h-8 w-8 rounded-full bg-primary/20 flex items-center justify-center ml-2 border border-slate-200 dark:border-slate-700 overflow-hidden">
+<img class="h-full w-full object-cover" data-alt="User profile avatar placeholder" src="https://lh3.googleusercontent.com/aida-public/AB6AXuDftDJ07mnc6zdW-KbMiPfzin-e_dIPfBo6W1f854orOGriVroJArFD5fSu6NMZhR4VE0Canr-T3CuCqchRba-r5JNWVci046SG2KeYgWyokhI1roDoVqqtWRcS3lZMoHi9I77To3aXbTJ8OnnY_7sQ3ff4pVk65m2uKjRZy7iUus9T9lIO2fDoYLHWgpgSHo_2VggcUKntHV-fhEZGBEzU9WkeHIWox7sZBe6r64YnwSfk5sGxc8-RXvbG8U_M8DUfnia2JMzQu8wV"/>
+</div>
+</div>
+</div>
+</div>
+</div>
+</header>
+<main class="flex-grow max-w-7xl mx-auto w-full px-4 sm:px-6 lg:px-8 py-8">
+<!-- Shop Header Section -->
+<section class="mb-8 overflow-hidden rounded-xl bg-white dark:bg-slate-900 shadow-sm border border-slate-200 dark:border-slate-800">
+<div class="relative h-48 sm:h-64 w-full bg-slate-200 dark:bg-slate-800">
+<div class="absolute inset-0 bg-gradient-to-r from-primary/40 to-indigo-600/40" data-alt="Abstract colorful tech shop banner background"></div>
+<img class="h-full w-full object-cover mix-blend-overlay" data-alt="Tech gadgets and electronics lifestyle banner" src="https://lh3.googleusercontent.com/aida-public/AB6AXuBtNBPZPcMO1bq2mnE6S2SoIihR4ZoAHXKBjQ6RsHFCdbSNd9jh0yB3ewQF_4GebViZHWE8Liq1p8te7dMj8zU2MNlKbwt1U-5BpVnPFCFKKnMaBELcmG6364LOWyhv6EIsXD2CwCZel5vS3BTus3vBPnZ_bHsTcEVpng9M40PKTJbp3Szl1g5lfTrK6FCrjdRZxnj1ZZ3IfxhtcMP33mpZC7XKDYtwV-9GyBQLqthoutGICmDofGsma8eSggCh0Xg-fTFgKd9dD3CD"/>
+</div>
+<div class="relative px-6 pb-6 pt-16 sm:pt-6">
+<div class="flex flex-col sm:flex-row sm:items-end sm:justify-between gap-6 -mt-20 sm:-mt-12">
+<div class="flex flex-col sm:flex-row items-center sm:items-end gap-4">
+<div class="h-24 w-24 sm:h-32 sm:w-32 rounded-xl bg-white dark:bg-slate-800 p-1 shadow-lg border border-slate-100 dark:border-slate-700">
+<img class="h-full w-full rounded-lg object-cover" data-alt="TechHub Official shop brand logo" src="https://lh3.googleusercontent.com/aida-public/AB6AXuB13fZa1-JwKxdmzApxtTfUIY3GKezQue9JK2XXM-d9yRAFuTu66tFTxTqjLdxEjBU-sQ4G77rH3Y-8tQ8RIh0blKcu0tI-neIG9KlNOmam9wFYQNMvLwuVVNC85j0SKkhRNCRIbIcFJglPGZ8DIS3nZZQZ1FlgxtUtAUvzLjgFP-ER5RHQsELSO_rg9aprmwgqlUTAEVaGgcslJJX-_ByhaS8JU9mEbPdOgJNNpExv5QHJopTvLCl4QxUBvxaIzSimXUTnX_MY1lAk"/>
+</div>
+<div class="text-center sm:text-left">
+<h1 class="text-2xl sm:text-3xl font-bold text-slate-900 dark:text-white">TechHub Official</h1>
+<div class="flex flex-wrap items-center justify-center sm:justify-start gap-x-4 gap-y-1 mt-1">
+<span class="flex items-center text-primary font-semibold">
+<span class="material-symbols-outlined text-[18px] fill-1">star</span>
+<span class="ml-1">4.8</span>
+<span class="text-slate-500 dark:text-slate-400 font-normal ml-1">(15k reviews)</span>
+</span>
+<span class="text-slate-500 dark:text-slate-400 text-sm">1.2k products</span>
+<span class="text-slate-500 dark:text-slate-400 text-sm">• Joined 2 years ago</span>
+</div>
+</div>
+</div>
+<div class="flex gap-3 justify-center">
+<button class="flex items-center gap-2 rounded-lg bg-slate-100 dark:bg-slate-800 px-6 py-2.5 text-sm font-bold text-slate-900 dark:text-white hover:bg-slate-200 dark:hover:bg-slate-700 transition-colors">
+<span class="material-symbols-outlined text-[20px]">person_add</span>
+                            Follow
+                        </button>
+<button class="flex items-center gap-2 rounded-lg bg-primary px-6 py-2.5 text-sm font-bold text-white hover:bg-primary/90 shadow-md shadow-primary/20 transition-all">
+<span class="material-symbols-outlined text-[20px]">chat</span>
+                            Chat
+                        </button>
+</div>
+</div>
+</div>
+</section>
+<!-- Stats and Quick Info -->
+<section class="grid grid-cols-1 sm:grid-cols-3 gap-4 mb-8">
+<div class="flex items-center gap-4 rounded-xl bg-white dark:bg-slate-900 p-5 shadow-sm border border-slate-200 dark:border-slate-800">
+<div class="h-12 w-12 rounded-full bg-primary/10 text-primary flex items-center justify-center">
+<span class="material-symbols-outlined">location_on</span>
+</div>
+<div>
+<p class="text-xs font-medium text-slate-500 dark:text-slate-400 uppercase tracking-wider">Location</p>
+<p class="text-lg font-bold text-slate-900 dark:text-white" data-location="San Francisco">San Francisco, CA</p>
+</div>
+</div>
+<div class="flex items-center gap-4 rounded-xl bg-white dark:bg-slate-900 p-5 shadow-sm border border-slate-200 dark:border-slate-800">
+<div class="h-12 w-12 rounded-full bg-emerald-100 text-emerald-600 flex items-center justify-center">
+<span class="material-symbols-outlined">bolt</span>
+</div>
+<div>
+<p class="text-xs font-medium text-slate-500 dark:text-slate-400 uppercase tracking-wider">Response Rate</p>
+<p class="text-lg font-bold text-slate-900 dark:text-white">99%</p>
+</div>
+</div>
+<div class="flex items-center gap-4 rounded-xl bg-white dark:bg-slate-900 p-5 shadow-sm border border-slate-200 dark:border-slate-800">
+<div class="h-12 w-12 rounded-full bg-amber-100 text-amber-600 flex items-center justify-center">
+<span class="material-symbols-outlined">schedule</span>
+</div>
+<div>
+<p class="text-xs font-medium text-slate-500 dark:text-slate-400 uppercase tracking-wider">Response Time</p>
+<p class="text-lg font-bold text-slate-900 dark:text-white">Within hours</p>
+</div>
+</div>
+</section>
+<!-- Filters and Search -->
+<div class="flex flex-col sm:flex-row items-center justify-between gap-4 mb-8">
+<h3 class="text-xl font-bold text-slate-900 dark:text-white w-full sm:w-auto">Products (1,248)</h3>
+<div class="flex flex-col sm:flex-row items-center gap-4 w-full sm:w-auto">
+<div class="relative w-full sm:w-64">
+<span class="absolute inset-y-0 left-0 flex items-center pl-3 text-slate-400">
+<span class="material-symbols-outlined text-[20px]">search</span>
+</span>
+<input class="block w-full rounded-lg border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 py-2 pl-10 pr-3 text-sm focus:ring-2 focus:ring-primary dark:text-white" placeholder="Search in this shop"/>
+</div>
+<div class="flex items-center gap-2 w-full sm:w-auto">
+<span class="text-sm text-slate-500 dark:text-slate-400 whitespace-nowrap">Sort by:</span>
+<select class="block w-full sm:w-auto rounded-lg border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 py-2 pl-3 pr-10 text-sm font-medium focus:ring-2 focus:ring-primary dark:text-white">
+<option>Newest Arrivals</option>
+<option>Price: Low to High</option>
+<option>Price: High to Low</option>
+<option>Best Selling</option>
+<option>Top Rated</option>
+</select>
+</div>
+</div>
+</div>
+<div class="flex flex-col lg:flex-row gap-8">
+<!-- Sidebar Navigation -->
+<aside class="w-full lg:w-64 flex-shrink-0">
+<div class="sticky top-24 space-y-8">
+<!-- Categories section -->
+<div>
+<h4 class="text-xs font-bold text-slate-400 uppercase tracking-wider mb-4">Categories</h4>
+<div class="flex flex-col gap-2">
+<a class="flex items-center justify-between px-3 py-2 rounded-lg bg-primary/5 text-primary font-medium text-sm transition-colors" href="#">
+                                Laptops
+                                <span class="text-xs bg-primary/10 px-1.5 py-0.5 rounded">124</span>
+</a>
+<a class="flex items-center justify-between px-3 py-2 rounded-lg text-slate-600 dark:text-slate-400 hover:bg-slate-100 dark:hover:bg-slate-800 font-medium text-sm transition-colors" href="#">
+                                Audio
+                                <span class="text-xs text-slate-400">86</span>
+</a>
+<a class="flex items-center justify-between px-3 py-2 rounded-lg text-slate-600 dark:text-slate-400 hover:bg-slate-100 dark:hover:bg-slate-800 font-medium text-sm transition-colors" href="#">
+                                Peripherals
+                                <span class="text-xs text-slate-400">210</span>
+</a>
+</div>
+</div>
+<!-- Price Range section -->
+<div>
+<h4 class="text-xs font-bold text-slate-400 uppercase tracking-wider mb-4">Price Range</h4>
+<div class="space-y-3">
+<div class="flex items-center gap-2">
+<div class="relative flex-1">
+<span class="absolute inset-y-0 left-3 flex items-center text-slate-400 text-sm">$</span>
+<input class="w-full rounded-lg border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 py-2 pl-7 pr-3 text-sm focus:ring-2 focus:ring-primary dark:text-white" placeholder="Min" type="number"/>
+</div>
+<div class="relative flex-1">
+<span class="absolute inset-y-0 left-3 flex items-center text-slate-400 text-sm">$</span>
+<input class="w-full rounded-lg border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 py-2 pl-7 pr-3 text-sm focus:ring-2 focus:ring-primary dark:text-white" placeholder="Max" type="number"/>
+</div>
+</div>
+<button class="w-full py-2 bg-primary text-white text-sm font-bold rounded-lg hover:bg-primary/90 transition-colors">Apply Price</button>
+</div>
+</div>
+<!-- Rating section -->
+<div>
+<h4 class="text-xs font-bold text-slate-400 uppercase tracking-wider mb-4">Rating</h4>
+<div class="space-y-3">
+<label class="flex items-center gap-3 cursor-pointer group">
+<input class="rounded border-slate-300 dark:border-slate-700 text-primary focus:ring-primary" type="checkbox"/>
+<div class="flex items-center text-amber-400">
+<span class="material-symbols-outlined text-[18px] fill-1">star</span>
+<span class="material-symbols-outlined text-[18px] fill-1">star</span>
+<span class="material-symbols-outlined text-[18px] fill-1">star</span>
+<span class="material-symbols-outlined text-[18px] fill-1">star</span>
+<span class="material-symbols-outlined text-[18px] fill-1">star</span>
+</div>
+<span class="text-sm text-slate-600 dark:text-slate-400 group-hover:text-primary transition-colors">&amp; up</span>
+</label>
+<label class="flex items-center gap-3 cursor-pointer group">
+<input class="rounded border-slate-300 dark:border-slate-700 text-primary focus:ring-primary" type="checkbox"/>
+<div class="flex items-center text-amber-400">
+<span class="material-symbols-outlined text-[18px] fill-1">star</span>
+<span class="material-symbols-outlined text-[18px] fill-1">star</span>
+<span class="material-symbols-outlined text-[18px] fill-1">star</span>
+<span class="material-symbols-outlined text-[18px] fill-1">star</span>
+<span class="material-symbols-outlined text-[18px]">star</span>
+</div>
+<span class="text-sm text-slate-600 dark:text-slate-400 group-hover:text-primary transition-colors">&amp; up</span>
+</label>
+<label class="flex items-center gap-3 cursor-pointer group">
+<input class="rounded border-slate-300 dark:border-slate-700 text-primary focus:ring-primary" type="checkbox"/>
+<div class="flex items-center text-amber-400">
+<span class="material-symbols-outlined text-[18px] fill-1">star</span>
+<span class="material-symbols-outlined text-[18px] fill-1">star</span>
+<span class="material-symbols-outlined text-[18px] fill-1">star</span>
+<span class="material-symbols-outlined text-[18px]">star</span>
+<span class="material-symbols-outlined text-[18px]">star</span>
+</div>
+<span class="text-sm text-slate-600 dark:text-slate-400 group-hover:text-primary transition-colors">&amp; up</span>
+</label>
+</div>
+</div>
+</div>
+</aside>
+<!-- Product Grid -->
+<div class="flex-1">
+<div class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-2 lg:grid-cols-3 gap-6">
+<!-- Product Card 1 -->
+<div class="group flex flex-col rounded-xl bg-white dark:bg-slate-900 shadow-sm hover:shadow-md transition-shadow border border-slate-200 dark:border-slate-800 overflow-hidden">
+<div class="relative aspect-square overflow-hidden bg-slate-100 dark:bg-slate-800">
+<img class="h-full w-full object-cover group-hover:scale-105 transition-transform duration-300" data-alt="Sleek modern wireless headphones in matte black" src="https://lh3.googleusercontent.com/aida-public/AB6AXuDE7-DQsS1tRy1r8WqNnmT-iQTWTrAWvqAF3-6UcLWx6aCa84cPMOB3IlXcW0Zrpbp2XWOW34pUWDgAnfqcq52EyKvmiForisAQltVvV1nSGo1NRKahSYfF_o2v_llpPvtNyjK0kRTC-zHtWmgKqbsRMH7Ha7T9Q1xs0MGBg3JFs8gxkM-Txp00rX-7oxpyQE3va2nnfGxrM2rSpjJpmrFH-9ir23hpr14uLBXZhW3ax0MId3NDYNaJGdAzysWUSSwLZUYlLr4DK6sO"/>
+<button class="absolute top-2 right-2 p-1.5 rounded-full bg-white/80 dark:bg-slate-900/80 text-slate-600 dark:text-slate-300 backdrop-blur-sm hover:text-primary">
+<span class="material-symbols-outlined text-[20px]">favorite</span>
+</button>
+</div>
+<div class="p-4 flex flex-col flex-grow">
+<p class="text-xs font-medium text-primary mb-1">Headphones</p>
+<h4 class="text-sm font-semibold text-slate-900 dark:text-white line-clamp-2 mb-2">SonicMax Wireless Over-Ear Headphones Pro</h4>
+<div class="mt-auto">
+<div class="flex items-center gap-1 mb-2">
+<div class="flex items-center text-amber-400">
+<span class="material-symbols-outlined text-[16px] fill-1">star</span>
+</div>
+<span class="text-xs font-bold text-slate-900 dark:text-white">4.9</span>
+<span class="text-xs text-slate-500 dark:text-slate-400">(2.4k sold)</span>
+</div>
+<div class="flex items-center justify-between">
+<p class="text-lg font-bold text-primary">$129.00</p>
+<button class="p-2 rounded-lg bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-300 hover:bg-primary hover:text-white transition-colors">
+<span class="material-symbols-outlined">add_shopping_cart</span>
+</button>
+</div>
+</div>
+</div>
+</div>
+<!-- Product Card 2 -->
+<div class="group flex flex-col rounded-xl bg-white dark:bg-slate-900 shadow-sm hover:shadow-md transition-shadow border border-slate-200 dark:border-slate-800 overflow-hidden">
+<div class="relative aspect-square overflow-hidden bg-slate-100 dark:bg-slate-800">
+<img class="h-full w-full object-cover group-hover:scale-105 transition-transform duration-300" data-alt="Minimalist ergonomic mechanical keyboard with RGB lighting" src="https://lh3.googleusercontent.com/aida-public/AB6AXuDywu3Pd0WDTPUx9d0TNdLVculU0MEUNUT5nWg8D3yIvt5rr95gYEARxDcoL9sF0pC1CpLhqRo-mQhEE_7wPISM_DT4gCT6e1wlTHs9M-Ve0aGj-XhCoisxP6Zfp457gdxZPSQfuI1692Gtzi-OA649jMIda1G0kAMjmZfBT93Jq0IkoKMp4OcNxTpKNFXGbSRiTi32bDpRPd5KoGX8tTcBy5UQVZYyVLkOfLTyBgktG_t3F-uuPUvq0CNbAFgEn24CFGrK97Bfx0B1"/>
+<button class="absolute top-2 right-2 p-1.5 rounded-full bg-white/80 dark:bg-slate-900/80 text-slate-600 dark:text-slate-300 backdrop-blur-sm hover:text-primary">
+<span class="material-symbols-outlined text-[20px]">favorite</span>
+</button>
+</div>
+<div class="p-4 flex flex-col flex-grow">
+<p class="text-xs font-medium text-primary mb-1">Accessories</p>
+<h4 class="text-sm font-semibold text-slate-900 dark:text-white line-clamp-2 mb-2">KeyCraft Mechanical Keyboard TKL</h4>
+<div class="mt-auto">
+<div class="flex items-center gap-1 mb-2">
+<div class="flex items-center text-amber-400">
+<span class="material-symbols-outlined text-[16px] fill-1">star</span>
+</div>
+<span class="text-xs font-bold text-slate-900 dark:text-white">4.7</span>
+<span class="text-xs text-slate-500 dark:text-slate-400">(850 sold)</span>
+</div>
+<div class="flex items-center justify-between">
+<p class="text-lg font-bold text-primary">$85.00</p>
+<button class="p-2 rounded-lg bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-300 hover:bg-primary hover:text-white transition-colors">
+<span class="material-symbols-outlined">add_shopping_cart</span>
+</button>
+</div>
+</div>
+</div>
+</div>
+<!-- Product Card 3 -->
+<div class="group flex flex-col rounded-xl bg-white dark:bg-slate-900 shadow-sm hover:shadow-md transition-shadow border border-slate-200 dark:border-slate-800 overflow-hidden">
+<div class="relative aspect-square overflow-hidden bg-slate-100 dark:bg-slate-800">
+<img class="h-full w-full object-cover group-hover:scale-105 transition-transform duration-300" data-alt="High resolution 4K computer monitor with thin bezels" src="https://lh3.googleusercontent.com/aida-public/AB6AXuAXwA4X7Z96hNLQaJbiBn3TZf42hPO_osYlI-2bCHMZjvWSRTmxGH_a9L1kS-FzbomT1EagMb8y70ByJ1gNcPDTONzmXmqB8-b5ZjAD6k7Teks3oboqlJ6JSNMSVv1O7SrjIe1oEh8zWq_Iwai1TZTjHoVEB-gC4W14jF59nfpXkarEA1XHCFFR00EjbDkb4fIgT4GBKyha0qR970_y4N9aajn1UCvAHJCpusoQmMz_4CE1929vDoUmWPykXCukBGmfKUpBRjmtROCN"/>
+<div class="absolute top-2 left-2 rounded-md bg-rose-500 px-2 py-1 text-[10px] font-bold text-white">15% OFF</div>
+<button class="absolute top-2 right-2 p-1.5 rounded-full bg-white/80 dark:bg-slate-900/80 text-slate-600 dark:text-slate-300 backdrop-blur-sm hover:text-primary">
+<span class="material-symbols-outlined text-[20px]">favorite</span>
+</button>
+</div>
+<div class="p-4 flex flex-col flex-grow">
+<p class="text-xs font-medium text-primary mb-1">Displays</p>
+<h4 class="text-sm font-semibold text-slate-900 dark:text-white line-clamp-2 mb-2">UltraVision 27" 4K HDR Studio Monitor</h4>
+<div class="mt-auto">
+<div class="flex items-center gap-1 mb-2">
+<div class="flex items-center text-amber-400">
+<span class="material-symbols-outlined text-[16px] fill-1">star</span>
+</div>
+<span class="text-xs font-bold text-slate-900 dark:text-white">5.0</span>
+<span class="text-xs text-slate-500 dark:text-slate-400">(430 sold)</span>
+</div>
+<div class="flex items-center justify-between">
+<div>
+<p class="text-lg font-bold text-primary">$349.00</p>
+<p class="text-xs text-slate-400 line-through">$410.00</p>
+</div>
+<button class="p-2 rounded-lg bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-300 hover:bg-primary hover:text-white transition-colors">
+<span class="material-symbols-outlined">add_shopping_cart</span>
+</button>
+</div>
+</div>
+</div>
+</div>
+<!-- Product Card 4 -->
+<div class="group flex flex-col rounded-xl bg-white dark:bg-slate-900 shadow-sm hover:shadow-md transition-shadow border border-slate-200 dark:border-slate-800 overflow-hidden">
+<div class="relative aspect-square overflow-hidden bg-slate-100 dark:bg-slate-800">
+<img class="h-full w-full object-cover group-hover:scale-105 transition-transform duration-300" data-alt="Compact portable bluetooth speaker in blue" src="https://lh3.googleusercontent.com/aida-public/AB6AXuA_lbxmJ1giGgnO8omeMTFSQ1P_Q0C5cI8VyIOtLyb_Irwe-TwE25asmFaR6ArHW5Y-ME2DlBaT_C9oOpmWKXqr1DVneYZ1UXaxauU5gDhh3HCBEbBvDosqecu_uK9V-ZImuI7ay0SV46AE2cGKHlaUXIINzRGV8_hItiyqeAg4u8DAWQyozwelei72m1VEeeQ2odtvWEsCa-VQ4dH4_D_rgY4IWqaV1U3zYYQehexZd75FWotWoB3mQaNmE8WEXSv6DlHoSiTyOikE"/>
+<button class="absolute top-2 right-2 p-1.5 rounded-full bg-white/80 dark:bg-slate-900/80 text-slate-600 dark:text-slate-300 backdrop-blur-sm hover:text-primary">
+<span class="material-symbols-outlined text-[20px]">favorite</span>
+</button>
+</div>
+<div class="p-4 flex flex-col flex-grow">
+<p class="text-xs font-medium text-primary mb-1">Audio</p>
+<h4 class="text-sm font-semibold text-slate-900 dark:text-white line-clamp-2 mb-2">Pulse360 Portable Bluetooth Speaker</h4>
+<div class="mt-auto">
+<div class="flex items-center gap-1 mb-2">
+<div class="flex items-center text-amber-400">
+<span class="material-symbols-outlined text-[16px] fill-1">star</span>
+</div>
+<span class="text-xs font-bold text-slate-900 dark:text-white">4.8</span>
+<span class="text-xs text-slate-500 dark:text-slate-400">(1.1k sold)</span>
+</div>
+<div class="flex items-center justify-between">
+<p class="text-lg font-bold text-primary">$59.99</p>
+<button class="p-2 rounded-lg bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-300 hover:bg-primary hover:text-white transition-colors">
+<span class="material-symbols-outlined">add_shopping_cart</span>
+</button>
+</div>
+</div>
+</div>
+</div>
+<!-- Product Card 5 -->
+<div class="group flex flex-col rounded-xl bg-white dark:bg-slate-900 shadow-sm hover:shadow-md transition-shadow border border-slate-200 dark:border-slate-800 overflow-hidden">
+<div class="relative aspect-square overflow-hidden bg-slate-100 dark:bg-slate-800">
+<img class="h-full w-full object-cover group-hover:scale-105 transition-transform duration-300" data-alt="Silver ultra-thin laptop on wooden desk" src="https://lh3.googleusercontent.com/aida-public/AB6AXuBwf4DtuYhCosBw7r3YnAVcLpX936pVTnkCpugmPt5U3cBiNSYDimNosWjUXZg_ZWeMM-8nMekDiboHjmwXJY3qE057RgTuYpOokv01vF64Phj_Gs72eEH1y2KgHfcIiRY7It9s5A3vIKZ6Q3NRDuIAItYTZfcJpryEaEWz4RaZGhLCmx0kGitcWVDl316OwFASNLCFFM7ds3AMs53aCLLMW9Dyjk_SOrQbfRiKRLJX_casoKcLZfEO5eNtFd8o7hWSs1dOlh1SSiDh"/>
+<button class="absolute top-2 right-2 p-1.5 rounded-full bg-white/80 dark:bg-slate-900/80 text-slate-600 dark:text-slate-300 backdrop-blur-sm hover:text-primary">
+<span class="material-symbols-outlined text-[20px]">favorite</span>
+</button>
+</div>
+<div class="p-4 flex flex-col flex-grow">
+<p class="text-xs font-medium text-primary mb-1">Computing</p>
+<h4 class="text-sm font-semibold text-slate-900 dark:text-white line-clamp-2 mb-2">Zenith Book Air M2 Ultralight</h4>
+<div class="mt-auto">
+<div class="flex items-center gap-1 mb-2">
+<div class="flex items-center text-amber-400">
+<span class="material-symbols-outlined text-[16px] fill-1">star</span>
+</div>
+<span class="text-xs font-bold text-slate-900 dark:text-white">4.9</span>
+<span class="text-xs text-slate-500 dark:text-slate-400">(120 sold)</span>
+</div>
+<div class="flex items-center justify-between">
+<p class="text-lg font-bold text-primary">$1,199.00</p>
+<button class="p-2 rounded-lg bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-300 hover:bg-primary hover:text-white transition-colors">
+<span class="material-symbols-outlined">add_shopping_cart</span>
+</button>
+</div>
+</div>
+</div>
+</div>
+<!-- Product Card 6 -->
+<div class="group flex flex-col rounded-xl bg-white dark:bg-slate-900 shadow-sm hover:shadow-md transition-shadow border border-slate-200 dark:border-slate-800 overflow-hidden">
+<div class="relative aspect-square overflow-hidden bg-slate-100 dark:bg-slate-800">
+<img class="h-full w-full object-cover group-hover:scale-105 transition-transform duration-300" data-alt="Smart watch with health tracking features" src="https://lh3.googleusercontent.com/aida-public/AB6AXuCwCT0Ly106ymMC5GJJFqAj5AKLTTLL5jQeSGSRFHHDoBrHELgkZGgpV8aLV1wcMjJ8orh2qbtYl9_0geClwDoblv7m8Hpxh0O7iippUL_brKhMeogTMysi6b_g1NTQyaMs4FR6CEVSKeYWi5XXHENbE145tuIXuEnLQr_ZeaGJpXzGwWVCdGUWSh2heLOkp6MuLHf4gHGL6R6rhLLujzVAO1J0B0_h-8_atDUAC7yCGnjofYopLtrkJJ0axK4Ws8vQHuNCCESIPtkh"/>
+<button class="absolute top-2 right-2 p-1.5 rounded-full bg-white/80 dark:bg-slate-900/80 text-slate-600 dark:text-slate-300 backdrop-blur-sm hover:text-primary">
+<span class="material-symbols-outlined text-[20px]">favorite</span>
+</button>
+</div>
+<div class="p-4 flex flex-col flex-grow">
+<p class="text-xs font-medium text-primary mb-1">Wearables</p>
+<h4 class="text-sm font-semibold text-slate-900 dark:text-white line-clamp-2 mb-2">LifeLink Active S2 Smart Watch</h4>
+<div class="mt-auto">
+<div class="flex items-center gap-1 mb-2">
+<div class="flex items-center text-amber-400">
+<span class="material-symbols-outlined text-[16px] fill-1">star</span>
+</div>
+<span class="text-xs font-bold text-slate-900 dark:text-white">4.6</span>
+<span class="text-xs text-slate-500 dark:text-slate-400">(3.1k sold)</span>
+</div>
+<div class="flex items-center justify-between">
+<p class="text-lg font-bold text-primary">$199.00</p>
+<button class="p-2 rounded-lg bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-300 hover:bg-primary hover:text-white transition-colors">
+<span class="material-symbols-outlined">add_shopping_cart</span>
+</button>
+</div>
+</div>
+</div>
+</div>
+</div>
+<!-- Pagination (Inside flex-1 content area) -->
+<div class="mt-12 flex items-center justify-center gap-2">
+<button class="p-2 rounded-lg border border-slate-200 dark:border-slate-800 hover:bg-slate-50 dark:hover:bg-slate-800 text-slate-600 dark:text-slate-300 disabled:opacity-50" disabled="">
+<span class="material-symbols-outlined">chevron_left</span>
+</button>
+<button class="w-10 h-10 rounded-lg bg-primary text-white font-bold">1</button>
+<button class="w-10 h-10 rounded-lg border border-slate-200 dark:border-slate-800 hover:bg-slate-50 dark:hover:bg-slate-800 text-slate-600 dark:text-slate-300">2</button>
+<button class="w-10 h-10 rounded-lg border border-slate-200 dark:border-slate-800 hover:bg-slate-50 dark:hover:bg-slate-800 text-slate-600 dark:text-slate-300">3</button>
+<span class="text-slate-400 px-2">...</span>
+<button class="w-10 h-10 rounded-lg border border-slate-200 dark:border-slate-800 hover:bg-slate-50 dark:hover:bg-slate-800 text-slate-600 dark:text-slate-300">42</button>
+<button class="p-2 rounded-lg border border-slate-200 dark:border-slate-800 hover:bg-slate-50 dark:hover:bg-slate-800 text-slate-600 dark:text-slate-300">
+<span class="material-symbols-outlined">chevron_right</span>
+</button>
+</div>
+</div>
+</div>
+</main>
+<!-- Footer -->
+<footer class="bg-white dark:bg-slate-900 border-t border-slate-200 dark:border-slate-800 py-12 mt-12">
+<div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+<div class="grid grid-cols-1 md:grid-cols-4 gap-8 mb-8">
+<div class="col-span-1 md:col-span-1">
+<div class="flex items-center gap-2 text-primary mb-4">
+<span class="material-symbols-outlined text-[28px]">storefront</span>
+<h2 class="text-slate-900 dark:text-white text-xl font-bold tracking-tight">AlexStore</h2>
+</div>
+<p class="text-slate-500 dark:text-slate-400 text-sm">The leading marketplace for verified tech sellers and premium electronics worldwide.</p>
+</div>
+<div>
+<h4 class="font-bold text-slate-900 dark:text-white mb-4">Shop</h4>
+<ul class="space-y-2 text-sm text-slate-500 dark:text-slate-400">
+<li><a class="hover:text-primary" href="#">Categories</a></li>
+<li><a class="hover:text-primary" href="#">Hot Deals</a></li>
+<li><a class="hover:text-primary" href="#">Brands</a></li>
+<li><a class="hover:text-primary" href="#">New Arrivals</a></li>
+</ul>
+</div>
+<div>
+<h4 class="font-bold text-slate-900 dark:text-white mb-4">Support</h4>
+<ul class="space-y-2 text-sm text-slate-500 dark:text-slate-400">
+<li><a class="hover:text-primary" href="#">Help Center</a></li>
+<li><a class="hover:text-primary" href="#">Track Order</a></li>
+<li><a class="hover:text-primary" href="#">Returns</a></li>
+<li><a class="hover:text-primary" href="#">Contact Us</a></li>
+</ul>
+</div>
+<div>
+<h4 class="font-bold text-slate-900 dark:text-white mb-4">Newsletter</h4>
+<p class="text-sm text-slate-500 dark:text-slate-400 mb-4">Get the latest updates from TechHub Official.</p>
+<div class="flex gap-2">
+<input class="flex-1 rounded-lg border border-slate-200 dark:border-slate-800 bg-slate-50 dark:bg-slate-800 px-3 py-2 text-sm focus:ring-2 focus:ring-primary dark:text-white" placeholder="Email address"/>
+<button class="bg-primary px-4 py-2 rounded-lg text-white font-medium hover:bg-primary/90">Join</button>
+</div>
+</div>
+</div>
+<div class="pt-8 border-t border-slate-200 dark:border-slate-800 flex flex-col sm:flex-row justify-between items-center gap-4">
+<p class="text-sm text-slate-500 dark:text-slate-400">© 2024 AlexStore. All rights reserved.</p>
+<div class="flex gap-6">
+<a class="text-slate-400 hover:text-primary transition-colors" href="#">
+<span class="material-symbols-outlined">social_leaderboard</span>
+</a>
+<a class="text-slate-400 hover:text-primary transition-colors" href="#">
+<span class="material-symbols-outlined text-[24px]">share</span>
+</a>
+<a class="text-slate-400 hover:text-primary transition-colors" href="#">
+<span class="material-symbols-outlined text-[24px]">public</span>
+</a>
+</div>
+</div>
+</div>
+</footer>
+</div>
+</body></html>
