@@ -81,5 +81,7 @@ export interface SellerPublicProfile {
         totalReviews: number;
         rating: number;
         joinedAt: string;
+        followerCount: number;
     };
+    shopCategories: Array<{ id: number; name: string }>;
 }

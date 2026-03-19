@@ -13,6 +13,7 @@ import {
     Store,
     Bell,
     LifeBuoy,
+    Users,
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { useUIStore } from '@/stores/uiStore';
@@ -29,6 +30,7 @@ const navItems = [
     { href: '/seller/dashboard', label: 'Tổng quan', icon: LayoutDashboard },
     { href: '/seller/products', label: 'Sản phẩm của tôi', icon: Package },
     { href: '/seller/orders', label: 'Đơn hàng', icon: ShoppingCart },
+    { href: '/seller/followers', label: 'Người theo dõi', icon: Users },
     { href: '/seller/notifications', label: 'Thông báo', icon: Bell },
     { href: '/seller/support', label: 'Hỗ trợ admin', icon: LifeBuoy },
 ];

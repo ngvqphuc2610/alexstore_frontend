@@ -15,5 +15,9 @@ export const paymentService = {
 
     verifyMoMo: async (queryString: string): Promise<any> => {
         return api.get(`/payment/momo/verify${queryString}`);
+    },
+
+    repay: async (orderId: string): Promise<{ url: string }> => {
+        return api.post(`/payment/repay/${orderId}`);
     }
 };

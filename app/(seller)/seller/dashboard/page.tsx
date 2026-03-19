@@ -11,6 +11,7 @@ import {
     AlertTriangle,
     TrendingUp,
     TrendingDown,
+    Users,
 } from 'lucide-react';
 import { useQuery } from '@tanstack/react-query';
 import { useAuthStore } from '@/stores/authStore';
@@ -29,6 +30,7 @@ import {
     LineChart, Line, BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, Legend, PieChart, Pie, Cell
 } from 'recharts';
 import { ordersService } from '@/services/orders.service';
+import { followsService } from '@/services/follows.service';
 
 export default function SellerDashboard() {
     const { user } = useAuthStore();
@@ -42,6 +44,14 @@ export default function SellerDashboard() {
         queryFn: () => ordersService.getSellerAnalytics(range),
         enabled: !!user?.id,
     });
+
+    // Fetch follow count
+    const { data: followerCountRes, isLoading: isLoadingFollowers } = useQuery({
+        queryKey: ['follower-count', user?.id],
+        queryFn: () => followsService.getFollowerCount(),
+        enabled: !!user?.id,
+    });
+    const followerCount = (followerCountRes as any)?.data ?? followerCountRes;
 
     // Fetch products for stats
     const { data: productsData, isLoading: isLoadingProducts } = useQuery({
@@ -118,12 +128,13 @@ export default function SellerDashboard() {
             color: 'text-blue-600 bg-blue-50',
         },
         {
-            label: 'Sản phẩm đang bán',
-            value: isLoading ? '...' : String(approvedProducts),
-            icon: Package,
+            label: 'Người theo dõi',
+            value: isLoadingFollowers ? '...' : String(followerCount || 0),
+            icon: Users,
             trend: null,
-            desc: `${totalProducts} tổng / ${pendingProducts} chờ duyệt`,
-            color: 'text-violet-600 bg-violet-50',
+            desc: 'Tổng số người theo dõi shop',
+            color: 'text-indigo-600 bg-indigo-50',
+            href: '/seller/followers',
         },
         {
             label: 'Cảnh báo kho',

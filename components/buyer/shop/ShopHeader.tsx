@@ -1,16 +1,50 @@
 'use client';
 
 import React from 'react';
-import { Store, UserPlus, MessageSquare, BadgeCheck } from 'lucide-react';
+import { Store, UserPlus, UserMinus, MessageSquare, BadgeCheck, Loader2 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import type { SellerPublicProfile } from '@/types';
+import { useQuery, useMutation } from '@tanstack/react-query';
+import { followsService } from '@/services/follows.service';
+import { useAuthStore } from '@/stores/authStore';
+import { toast } from 'sonner';
 
 interface ShopHeaderProps {
     profile: SellerPublicProfile;
 }
 
 export default function ShopHeader({ profile }: ShopHeaderProps) {
+    const { isAuthenticated } = useAuthStore();
     const isVerified = profile.sellerType === 'MALL' || profile.sellerType === 'PRO';
+
+    const { data: followStatus, isLoading: isStatusLoading, refetch: refetchStatus } = useQuery({
+        queryKey: ['follow-status', profile.id],
+        queryFn: () => followsService.getStatus(profile.id),
+        enabled: !!profile.id && isAuthenticated,
+    });
+
+    const toggleFollowMutation = useMutation({
+        mutationFn: () => followStatus?.isFollowing 
+            ? followsService.unfollow(profile.id) 
+            : followsService.follow(profile.id),
+        onSuccess: () => {
+            refetchStatus();
+            toast.success(followStatus?.isFollowing ? 'Đã bỏ theo dõi' : 'Đã theo dõi cửa hàng');
+        },
+        onError: (err: any) => {
+            toast.error(err.message || 'Có lỗi xảy ra. Vui lòng thử lại sau.');
+        }
+    });
+
+    const [isHovered, setIsHovered] = React.useState(false);
+
+    const handleFollowClick = () => {
+        if (!isAuthenticated) {
+            toast.warning('Vui lòng đăng nhập để theo dõi cửa hàng');
+            return;
+        }
+        toggleFollowMutation.mutate();
+    };
 
     return (
         <section className="mb-8 overflow-hidden rounded-xl bg-white dark:bg-slate-900 shadow-sm border border-slate-200 dark:border-slate-800">
@@ -48,6 +82,9 @@ export default function ShopHeader({ profile }: ShopHeaderProps) {
                                     {profile.stats.totalProducts.toLocaleString()} sản phẩm
                                 </span>
                                 <span className="text-slate-500 dark:text-slate-400 text-sm">
+                                    • {profile.stats.followerCount.toLocaleString()} người theo dõi
+                                </span>
+                                <span className="text-slate-500 dark:text-slate-400 text-sm">
                                     • Tham gia {new Date(profile.stats.joinedAt).getFullYear()}
                                 </span>
                             </div>
@@ -56,9 +93,38 @@ export default function ShopHeader({ profile }: ShopHeaderProps) {
 
                     {/* Actions */}
                     <div className="flex gap-3 justify-center">
-                        <Button variant="outline" className="gap-2 px-6 border-slate-200 dark:border-slate-700">
-                            <UserPlus className="h-4 w-4" />
-                            Theo dõi
+                        <Button 
+                            variant={followStatus?.isFollowing ? (isHovered ? "destructive" : "secondary") : "default"} 
+                            className={`gap-2 px-6 min-w-[150px] transition-all duration-200 ${
+                                !followStatus?.isFollowing && !toggleFollowMutation.isPending 
+                                ? "bg-indigo-600 hover:bg-indigo-700 text-white border-transparent" 
+                                : ""
+                            }`}
+                            onClick={handleFollowClick}
+                            onMouseEnter={() => setIsHovered(true)}
+                            onMouseLeave={() => setIsHovered(false)}
+                            disabled={toggleFollowMutation.isPending || (isAuthenticated && isStatusLoading)}
+                        >
+                            {toggleFollowMutation.isPending ? (
+                                <Loader2 className="h-4 w-4 animate-spin" />
+                            ) : followStatus?.isFollowing ? (
+                                isHovered ? (
+                                    <>
+                                        <UserMinus className="h-4 w-4" />
+                                        Bỏ theo dõi
+                                    </>
+                                ) : (
+                                    <>
+                                        <BadgeCheck className="h-4 w-4 text-emerald-600" />
+                                        Đang theo dõi
+                                    </>
+                                )
+                            ) : (
+                                <>
+                                    <UserPlus className="h-4 w-4" />
+                                    Theo dõi
+                                </>
+                            )}
                         </Button>
                         <Button className="gap-2 px-6 shadow-md shadow-primary/20">
                             <MessageSquare className="h-4 w-4" />
