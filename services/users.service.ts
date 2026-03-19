@@ -26,4 +26,8 @@ export const usersService = {
     updateProfile: async (data: { address?: string; phoneNumber?: string }): Promise<any> => {
         return api.put('/users/me', data);
     },
+
+    updateSellerProfile: async (data: { shopName?: string; taxCode?: string; pickupAddress?: string; description?: string }): Promise<any> => {
+        return api.patch('/users/me/seller-profile', data);
+    },
 };

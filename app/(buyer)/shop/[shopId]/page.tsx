@@ -74,7 +74,13 @@ export default function ShopProfilePage({ params }: { params: Promise<{ shopId: 
             </div>
 
             <div className="flex flex-col lg:flex-row gap-8 pb-12">
-                <ShopSidebarFilter onFilterChange={setFilters} />
+                <ShopSidebarFilter 
+                    categories={profile.shopCategories || []} 
+                    onFilterChange={(newFilters) => {
+                        setFilters(newFilters);
+                        setPage(1);
+                    }} 
+                />
 
                 {/* Product Grid */}
                 <div className="flex-1">

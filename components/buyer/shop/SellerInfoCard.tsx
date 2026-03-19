@@ -5,6 +5,12 @@ import Link from 'next/link';
 import { Store, BadgeCheck, MessageSquare, Package, Star, Clock } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 
+import { useQuery, useMutation } from '@tanstack/react-query';
+import { followsService } from '@/services/follows.service';
+import { useAuthStore } from '@/stores/authStore';
+import { toast } from 'sonner';
+import { Loader2, UserPlus, UserMinus } from 'lucide-react';
+
 interface SellerInfoData {
     id: string;
     username: string;
@@ -40,11 +46,41 @@ function getTimeSinceJoined(dateStr?: string): string {
 }
 
 export default function SellerInfoCard({ seller, sellerId }: SellerInfoCardProps) {
+    const { isAuthenticated } = useAuthStore();
     const profile = seller.sellerProfile;
     const shopName = profile?.shopName || seller.username;
     const rating = profile?.shopRating ?? 0;
     const isVerified = profile?.verificationStatus === 'APPROVED';
     const joinedTime = getTimeSinceJoined(seller.createdAt);
+
+    const { data: followStatus, isLoading: isStatusLoading, refetch: refetchStatus } = useQuery({
+        queryKey: ['follow-status', sellerId],
+        queryFn: () => followsService.getStatus(sellerId),
+        enabled: !!sellerId && isAuthenticated,
+    });
+
+    const toggleFollowMutation = useMutation({
+        mutationFn: () => followStatus?.isFollowing 
+            ? followsService.unfollow(sellerId) 
+            : followsService.follow(sellerId),
+        onSuccess: () => {
+            refetchStatus();
+            toast.success(followStatus?.isFollowing ? 'Đã bỏ theo dõi' : 'Đã theo dõi cửa hàng');
+        },
+        onError: (err: any) => {
+            toast.error(err.message || 'Có lỗi xảy ra');
+        }
+    });
+
+    const [isHovered, setIsHovered] = React.useState(false);
+
+    const handleFollowClick = () => {
+        if (!isAuthenticated) {
+            toast.warning('Vui lòng đăng nhập để theo dõi cửa hàng');
+            return;
+        }
+        toggleFollowMutation.mutate();
+    };
 
     return (
         <div className="bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-800 rounded-2xl p-6 shadow-sm">
@@ -76,7 +112,7 @@ export default function SellerInfoCard({ seller, sellerId }: SellerInfoCardProps
                     <div className="text-center">
                         <div className="flex items-center justify-center gap-1">
                             <Star className="h-4 w-4 fill-yellow-400 text-yellow-400" />
-                            <p className="text-xl font-extrabold text-primary">{rating.toFixed(1)}</p>
+                            <p className="text-xl font-extrabold text-primary">{Number(rating).toFixed(1)}</p>
                         </div>
                         <p className="text-xs font-bold text-slate-400 uppercase tracking-wider">Đánh giá</p>
                     </div>
@@ -93,13 +129,46 @@ export default function SellerInfoCard({ seller, sellerId }: SellerInfoCardProps
 
                 {/* Right: Buttons */}
                 <div className="flex flex-col sm:flex-row gap-3 w-full md:w-auto">
+                    <Button 
+                        variant={followStatus?.isFollowing ? (isHovered ? "destructive" : "secondary") : "default"}
+                        className={`min-w-[130px] transition-all duration-200 ${
+                            !followStatus?.isFollowing && !toggleFollowMutation.isPending 
+                            ? "bg-indigo-600 hover:bg-indigo-700 text-white border-transparent shadow-sm" 
+                            : ""
+                        }`}
+                        onClick={handleFollowClick}
+                        onMouseEnter={() => setIsHovered(true)}
+                        onMouseLeave={() => setIsHovered(false)}
+                        disabled={toggleFollowMutation.isPending || (isAuthenticated && isStatusLoading)}
+                    >
+                        {toggleFollowMutation.isPending ? (
+                            <Loader2 className="h-4 w-4 animate-spin" />
+                        ) : followStatus?.isFollowing ? (
+                            isHovered ? (
+                                <>
+                                    <UserMinus className="h-4 w-4 mr-2 " />
+                                    Bỏ theo dõi
+                                </>
+                            ) : (
+                                <>
+                                    <BadgeCheck className="h-4 w-4 mr-2 text-emerald-600" />
+                                    Đang theo dõi
+                                </>
+                            )
+                        ) : (
+                            <>
+                                <UserPlus className="h-4 w-4 mr-2" />
+                                Theo dõi
+                            </>
+                        )}
+                    </Button>
                     <Button asChild className="shadow-lg shadow-primary/20">
                         <Link href={`/shop/${sellerId}`}>
                             <Store className="h-4 w-4 mr-2" />
                             Xem Shop
                         </Link>
                     </Button>
-                    <Button variant="outline" className="border-primary/20">
+                    <Button variant="outline" className="border-primary/20 hidden lg:flex">
                         <MessageSquare className="h-4 w-4 mr-2" />
                         Nhắn tin
                     </Button>

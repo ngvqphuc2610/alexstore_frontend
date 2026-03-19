@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { ProfileLayout } from '@/components/shared/ProfileLayout';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { ordersService } from '@/services/orders.service';
@@ -16,6 +16,8 @@ import { ReviewForm } from '@/components/shared/ReviewForm';
 import Link from 'next/link';
 import { motion } from 'framer-motion';
 import { toast } from 'sonner';
+import { paymentService } from '@/services/payment.service';
+import { Clock } from 'lucide-react';
 
 const ORDER_TABS = [
     { id: 'all', label: 'Tất cả', status: undefined },
@@ -26,6 +28,42 @@ const ORDER_TABS = [
     { id: 'cancelled', label: 'Đã hủy', status: 'CANCELLED' },
     { id: 'refund', label: 'Trả hàng/Hoàn tiền', status: 'REFUND' },
 ];
+
+function CountdownTimer({ expiresAt, onExpire }: { expiresAt: string; onExpire?: () => void }) {
+    const [timeLeft, setTimeLeft] = useState<number>(0);
+
+    useEffect(() => {
+        const calculate = () => {
+            const diff = new Date(expiresAt).getTime() - new Date().getTime();
+            return diff > 0 ? diff : 0;
+        };
+
+        setTimeLeft(calculate());
+
+        const timer = setInterval(() => {
+            const next = calculate();
+            setTimeLeft(next);
+            if (next === 0) {
+                clearInterval(timer);
+                onExpire?.();
+            }
+        }, 1000);
+
+        return () => clearInterval(timer);
+    }, [expiresAt]);
+
+    if (timeLeft === 0) return <span className="text-red-500 font-medium">Đã hết hạn</span>;
+
+    const m = Math.floor(timeLeft / 60000);
+    const s = Math.floor((timeLeft % 60000) / 1000);
+
+    return (
+        <span className="flex items-center gap-1.5 text-amber-600 font-medium font-mono">
+            <Clock className="h-3.5 w-3.5" />
+            {m.toString().padStart(2, '0')}:{s.toString().padStart(2, '0')} còn lại
+        </span>
+    );
+}
 
 export default function BuyerOrdersPage() {
     const [activeTab, setActiveTab] = useState(ORDER_TABS[0]);
@@ -38,6 +76,15 @@ export default function BuyerOrdersPage() {
     const [selectedProductId, setSelectedProductId] = useState<string | null>(null);
 
     const queryClient = useQueryClient();
+
+    // Refetch on window focus
+    useEffect(() => {
+        const onFocus = () => {
+            queryClient.invalidateQueries({ queryKey: ['my-orders'] });
+        };
+        window.addEventListener('focus', onFocus);
+        return () => window.removeEventListener('focus', onFocus);
+    }, [queryClient]);
 
     const cancelMutation = useMutation({
         mutationFn: (id: string) => ordersService.cancelOrder(id),
@@ -73,6 +120,23 @@ export default function BuyerOrdersPage() {
         if (window.confirm('Bạn xác nhận đã nhận được hàng?')) {
             confirmMutation.mutate(id);
         }
+    };
+
+    const repayMutation = useMutation({
+        mutationFn: (orderId: string) => paymentService.repay(orderId),
+        onSuccess: (data) => {
+            if (data.url) {
+                window.location.href = data.url;
+            }
+        },
+        onError: (error: any) => {
+            const message = error?.response?.data?.message || 'Không thể thực hiện thanh toán ngay lúc này';
+            toast.error(message);
+        }
+    });
+
+    const handleRepay = (id: string) => {
+        repayMutation.mutate(id);
     };
 
     const { data, isLoading } = useQuery({
@@ -156,6 +220,13 @@ export default function BuyerOrdersPage() {
                                             <span className="text-xs text-gray-500">{formatDate(order.createdAt)}</span>
                                         </div>
                                         <div className="flex items-center gap-2 font-medium text-sm">
+                                            {order.status === 'PENDING' && order.paymentMethod !== 'COD' && (
+                                                <CountdownTimer 
+                                                    expiresAt={order.expiresAt} 
+                                                    onExpire={() => queryClient.invalidateQueries({ queryKey: ['my-orders'] })} 
+                                                />
+                                            )}
+                                            <span className="text-gray-300">|</span>
                                             <span className="text-gray-500 font-medium">
                                                 {PAYMENT_STATUS_CONFIG[order.paymentStatus as keyof typeof PAYMENT_STATUS_CONFIG]?.label || order.paymentStatus}
                                             </span>
@@ -221,6 +292,15 @@ export default function BuyerOrdersPage() {
                                             <span className="text-xl font-semibold text-indigo-600">{formatCurrency(order.totalAmount)}</span>
                                         </div>
                                         <div className="flex flex-wrap gap-2">
+                                            {order.status === 'PENDING' && order.paymentMethod !== 'COD' && (
+                                                <Button 
+                                                    className="bg-amber-500 hover:bg-amber-600 text-white font-medium" 
+                                                    onClick={() => handleRepay(order.id)}
+                                                    disabled={repayMutation.isPending}
+                                                >
+                                                    Thanh toán ngay
+                                                </Button>
+                                            )}
                                             {order.status === 'SHIPPING' && (
                                                 <Button 
                                                     className="bg-indigo-600 hover:bg-indigo-700 font-medium" 
@@ -236,7 +316,7 @@ export default function BuyerOrdersPage() {
                                             {order.status === 'COMPLETED' && (
                                                 <Button className="bg-indigo-600 hover:bg-indigo-700">Mua lại</Button>
                                             )}
-                                            {order.status === 'PENDING' || order.status === 'PENDING_PAYMENT' ? (
+                                            {order.status === 'PENDING' ? (
                                                 <Button 
                                                     variant="destructive" 
                                                     onClick={() => handleCancelOrder(order.id)}
