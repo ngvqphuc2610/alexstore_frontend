@@ -11,84 +11,118 @@ import { ORDER_STATUS_CONFIG, PAYMENT_STATUS_CONFIG, formatCurrency, formatDate 
 import { getImageUrl } from '@/lib/utils';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from '@/components/ui/dialog';
 import { ReviewForm } from '@/components/shared/ReviewForm';
+import { ChatButton } from '@/components/shared/ChatButton';
 import { toast } from 'sonner';
 
 export default function OrderDetailsPage() {
-    const params = useParams();
-    const router = useRouter();
-    const queryClient = useQueryClient();
-    const orderId = params.id as string;
+  const params = useParams();
+  const router = useRouter();
+  const queryClient = useQueryClient();
+  const orderId = params.id as string;
 
-    const [reviewDialogOpen, setReviewDialogOpen] = useState(false);
-    const [selectedProductId, setSelectedProductId] = useState<string | null>(null);
+  const [reviewDialogOpen, setReviewDialogOpen] = useState(false);
+  const [selectedProductId, setSelectedProductId] = useState<string | null>(null);
 
-    const confirmMutation = useMutation({
-        mutationFn: ordersService.confirmReceipt,
-        onSuccess: () => {
-            toast.success('Đã xác nhận nhận hàng thành công!');
-            queryClient.invalidateQueries({ queryKey: ['order', orderId] });
-        },
-        onError: (err: any) => {
-            toast.error(err.message || 'Lỗi khi xác nhận nhận hàng');
-        }
-    });
+  const confirmMutation = useMutation({
+    mutationFn: ordersService.confirmReceipt,
+    onSuccess: () => {
+      toast.success('Đã xác nhận nhận hàng thành công!');
+      queryClient.invalidateQueries({ queryKey: ['order', orderId] });
+    },
+    onError: (err: any) => {
+      toast.error(err.message || 'Lỗi khi xác nhận nhận hàng');
+    },
+  });
 
-    const handleConfirmReceipt = () => {
-        if (confirm('Bạn xác nhận đã nhận được hàng?')) {
-            confirmMutation.mutate(orderId);
-        }
-    };
-
-    const { data: order, isLoading, isError } = useQuery({
-        queryKey: ['order', orderId],
-        queryFn: () => ordersService.getById(orderId),
-    });
-
-    if (isLoading) {
-        return (
-            <div className="flex justify-center items-center min-h-[400px]">
-                <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-indigo-600"></div>
-            </div>
-        );
+  const handleConfirmReceipt = () => {
+    if (confirm('Bạn xác nhận đã nhận được hàng?')) {
+      confirmMutation.mutate(orderId);
     }
+  };
 
-    if (isError || !order) {
-        return (
-            <div className="flex flex-col items-center justify-center min-h-[400px] gap-4">
-                <p className="text-gray-500">Trang chi tiết đơn hàng không tìm thấy hoặc bạn không có quyền truy cập.</p>
-                <Button onClick={() => router.back()} variant="outline">Quay lại</Button>
-            </div>
-        );
-    }
+  const {
+    data: order,
+    isLoading,
+    isError,
+  } = useQuery({
+    queryKey: ['order', orderId],
+    queryFn: () => ordersService.getById(orderId),
+  });
 
+  if (isLoading) {
     return (
-        <div className="container mx-auto py-8 px-4 sm:px-6 lg:px-8 max-w-4xl space-y-6">
-            <div className="flex items-center justify-between">
-                <button 
-                    onClick={() => router.back()}
-                    className="flex items-center gap-2 text-gray-600 hover:text-indigo-600 font-medium transition-colors"
-                >
-                    <ArrowLeft className="h-4 w-4" /> TRỞ LẠI
-                </button>
-                <div className="flex gap-4 items-center">
-                    <span className="text-sm text-gray-500 font-mono">Mã Đơn Hàng: {order.orderCode}</span>
-                    <span className="text-gray-300">|</span>
-                    <span className={`font-medium ${ORDER_STATUS_CONFIG[order.status as keyof typeof ORDER_STATUS_CONFIG]?.color || 'text-gray-600'}`}>
-                        {ORDER_STATUS_CONFIG[order.status as keyof typeof ORDER_STATUS_CONFIG]?.label || order.status}
-                    </span>
-                    {order.status === 'SHIPPING' && (
-                        <Button 
-                            variant="default" 
-                            className="ml-2 bg-indigo-600 hover:bg-indigo-700 text-white" 
-                            size="sm"
-                            onClick={handleConfirmReceipt}
-                            disabled={confirmMutation.isPending}
-                        >
-                            {confirmMutation.isPending ? 'Đang xử lý...' : 'Đã nhận được hàng'}
-                        </Button>
-                    )}
-                </div>
-            </div>
+      <div className="flex justify-center items-center min-h-[400px]">
+        <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-indigo-600"></div>
+      </div>
+    );
+  }
+
+  if (isError || !order) {
+    return (
+      <div className="flex flex-col items-center justify-center min-h-[400px] gap-4">
+        <p className="text-gray-500">
+          Trang chi tiết đơn hàng không tìm thấy hoặc bạn không có quyền truy cập.
+        </p>
+        <Button onClick={() => router.back()} variant="outline">
+          Quay lại
+        </Button>
+      </div>
+    );
+  }
+
+  const sellerId = order.orderItems?.[0]?.product?.sellerId;
+
+  return (
+    <div className="container mx-auto py-8 px-4 sm:px-6 lg:px-8 max-w-4xl space-y-6">
+      <div className="flex items-center justify-between">
+        <button
+          onClick={() => router.back()}
+          className="flex items-center gap-2 text-gray-600 hover:text-indigo-600 font-medium transition-colors"
+        >
+          <ArrowLeft className="h-4 w-4" /> TRỞ LẠI
+        </button>
+        <div className="flex gap-4 items-center">
+          <span className="text-sm text-gray-500 font-mono">
+            Mã Đơn Hàng: {order.orderCode}
+          </span>
+          <span className="text-gray-300">|</span>
+          <span
+            className={`font-medium ${
+              ORDER_STATUS_CONFIG[order.status as keyof typeof ORDER_STATUS_CONFIG]?.color ||
+              'text-gray-600'
+            }`}
+          >
+            {ORDER_STATUS_CONFIG[order.status as keyof typeof ORDER_STATUS_CONFIG]?.label ||
+              order.status}
+          </span>
+          {sellerId && (
+            <ChatButton
+              sellerId={sellerId}
+              order={{
+                id: order.id,
+                orderCode: order.orderCode,
+                totalAmount: Number(order.totalAmount),
+                status: order.status,
+              }}
+              size="sm"
+              variant="outline"
+              className="ml-2"
+              shopName={order.orderItems?.[0]?.product?.seller?.username}
+            />
+          )}
+          {order.status === 'SHIPPING' && (
+            <Button
+              variant="default"
+              className="ml-2 bg-indigo-600 hover:bg-indigo-700 text-white"
+              size="sm"
+              onClick={handleConfirmReceipt}
+              disabled={confirmMutation.isPending}
+            >
+              {confirmMutation.isPending ? 'Đang xử lý...' : 'Đã nhận được hàng'}
+            </Button>
+          )}
+        </div>
+      </div>
 
             {/* Address & Payment Info */}
             <div className="grid grid-cols-1 md:grid-cols-2 gap-6">

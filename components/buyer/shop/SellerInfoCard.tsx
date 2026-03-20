@@ -10,6 +10,7 @@ import { followsService } from '@/services/follows.service';
 import { useAuthStore } from '@/stores/authStore';
 import { toast } from 'sonner';
 import { Loader2, UserPlus, UserMinus } from 'lucide-react';
+import { ChatButton } from '@/components/shared/ChatButton';
 
 interface SellerInfoData {
     id: string;
@@ -168,10 +169,11 @@ export default function SellerInfoCard({ seller, sellerId }: SellerInfoCardProps
                             Xem Shop
                         </Link>
                     </Button>
-                    <Button variant="outline" className="border-primary/20 hidden lg:flex">
-                        <MessageSquare className="h-4 w-4 mr-2" />
-                        Nhắn tin
-                    </Button>
+                    <ChatButton 
+                        sellerId={sellerId} 
+                        shopName={shopName} 
+                        className="hidden lg:flex" 
+                    />
                 </div>
             </div>
         </div>

@@ -14,6 +14,7 @@ import {
     Bell,
     LifeBuoy,
     Users,
+    MessageSquare,
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { useUIStore } from '@/stores/uiStore';
@@ -32,6 +33,7 @@ const navItems = [
     { href: '/seller/orders', label: 'Đơn hàng', icon: ShoppingCart },
     { href: '/seller/followers', label: 'Người theo dõi', icon: Users },
     { href: '/seller/notifications', label: 'Thông báo', icon: Bell },
+    { href: '/seller/chat', label: 'Tin nhắn', icon: MessageSquare },
     { href: '/seller/support', label: 'Hỗ trợ admin', icon: LifeBuoy },
 ];
 

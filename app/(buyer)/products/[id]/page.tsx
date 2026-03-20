@@ -4,6 +4,7 @@ import React, { useState, use } from 'react';
 import Link from 'next/link';
 import { ShoppingBag, Star, Share2, Heart, Plus, Minus, ShieldCheck, Truck, ChevronLeft, Package, RotateCcw, MessageSquare, Loader2 } from 'lucide-react';
 import SellerInfoCard from '@/components/buyer/shop/SellerInfoCard';
+import { ChatButton } from '@/components/shared/ChatButton';
 import { Button } from '@/components/ui/button';
 import { Card } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
@@ -327,6 +328,18 @@ export default function ProductDetailPage({ params }: { params: Promise<{ id: st
                                 <Button size="lg" variant="outline" className="h-12 px-5 hover:bg-blue-50 hover:text-blue-500 hover:border-blue-200 transition-colors">
                                     <Share2 className="h-5 w-5" />
                                 </Button>
+                                <ChatButton
+                                    sellerId={(product as any).sellerId}
+                                    product={{
+                                        id: (product as any).id,
+                                        name: (product as any).name,
+                                        price: (product as any).price,
+                                        imageUrl: (product as any).images?.[0]?.imageUrl
+                                    }}
+                                    variant="outline"
+                                    size="lg"
+                                    className="h-12 px-6"
+                                />
                             </div>
 
                             {/* Trust badges */}

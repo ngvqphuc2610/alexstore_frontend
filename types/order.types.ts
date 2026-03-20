@@ -10,6 +10,7 @@ export interface OrderItem {
     product?: {
         id: string;
         name: string;
+        sellerId: string;
         images?: { imageUrl: string; isPrimary: boolean }[];
         seller?: { username: string };
     };
