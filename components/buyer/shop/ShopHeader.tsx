@@ -1,13 +1,14 @@
 'use client';
 
 import React from 'react';
-import { Store, UserPlus, UserMinus, MessageSquare, BadgeCheck, Loader2 } from 'lucide-react';
+import { Store, UserPlus, UserMinus, BadgeCheck, Loader2 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import type { SellerPublicProfile } from '@/types';
 import { useQuery, useMutation } from '@tanstack/react-query';
 import { followsService } from '@/services/follows.service';
 import { useAuthStore } from '@/stores/authStore';
 import { toast } from 'sonner';
+import { ChatButton } from '@/components/shared/ChatButton';
 
 interface ShopHeaderProps {
     profile: SellerPublicProfile;
@@ -126,10 +127,12 @@ export default function ShopHeader({ profile }: ShopHeaderProps) {
                                 </>
                             )}
                         </Button>
-                        <Button className="gap-2 px-6 shadow-md shadow-primary/20">
-                            <MessageSquare className="h-4 w-4" />
-                            Nhắn tin
-                        </Button>
+                        <ChatButton 
+                            sellerId={profile.id} 
+                            shopName={profile.shopName} 
+                            className="gap-2 px-6 shadow-md shadow-primary/20"
+                            variant="default"
+                        />
                     </div>
                 </div>
             </div>

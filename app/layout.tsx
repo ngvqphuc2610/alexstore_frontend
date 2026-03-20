@@ -3,6 +3,8 @@ import { Geist, Geist_Mono } from "next/font/google";
 import { QueryProvider } from "@/providers/QueryProvider";
 import { AuthProvider } from "@/providers/AuthProvider";
 import { SocketProvider } from "@/providers/SocketProvider";
+import { ChatProvider } from "@/providers/ChatProvider";
+import { ChatWidget } from "@/components/shared/ChatWidget";
 import { Toaster } from "@/components/ui/sonner";
 import "./globals.css";
 
@@ -35,7 +37,10 @@ export default function RootLayout({
         <QueryProvider>
           <AuthProvider>
             <SocketProvider>
-              {children}
+              <ChatProvider>
+                {children}
+                <ChatWidget />
+              </ChatProvider>
             </SocketProvider>
             <Toaster richColors position="top-right" />
           </AuthProvider>

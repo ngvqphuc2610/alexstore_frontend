@@ -28,13 +28,7 @@ import { NotificationDropdown } from './NotificationDropdown';
 
 const NAV_CATEGORIES = [
     { label: 'Flash Deals', href: '/products?sort=discount' },
-    { label: 'Electronics', href: '/products?category=electronics' },
-    { label: 'Fashion', href: '/products?category=fashion' },
-    { label: 'Home & Living', href: '/products?category=home' },
-    { label: 'Beauty & Personal Care', href: '/products?category=beauty' },
-    { label: 'Sports', href: '/products?category=sports' },
-    { label: 'Toys & Kids', href: '/products?category=toys' },
-    { label: 'Books', href: '/products?category=books' },
+    { label: 'All Shops', href: '/shops' },
 ];
 
 export default function BuyerNavbar() {

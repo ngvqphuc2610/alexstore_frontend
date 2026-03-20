@@ -48,6 +48,14 @@ Tùy chỉnh thông tin công khai của gian hàng.
 - [ ] **Quản lý Đánh giá (Reviews):** Xem và phản hồi lại đánh giá của khách hàng về sản phẩm của mình.
 - [ ] **Trung tâm hỗ trợ (Ticket System):** Gửi yêu cầu hỗ trợ đến Admin khi gặp vấn đề về rút tiền, tranh chấp đơn hàng, hoặc lỗi hệ thống.
 
+## 7. Quản lý Chat với Khách hàng - Ưu tiên: Cao *(Đã hoàn thành)*
+Kênh tương tác trực tiếp để chốt đơn và chăm sóc khách hàng.
+- [x] **Seller Chat Dashboard:** Giao diện quản lý nhiều hội thoại cùng lúc (Side-by-side).
+- [x] **Quick Product/Order Cards:** Gửi nhanh thông tin sản phẩm hoặc trạng thái đơn hàng cho khách.
+- [x] **Unread Counter:** Thông báo số tin nhắn chưa đọc ngay trên thanh điều hướng.
+- [x] **Push Notifications:** Nhận email/thông báo khi có khách nhắn tin mới (Offline fallback via System Notification).
+- [x] **Chat History:** Lưu trữ và tìm kiếm lại các cuộc hội thoại cũ (Cursor-based pagination).
+
 ---
 
 ### 🚀 Lộ trình Đề xuất để code tiếp:
@@ -55,5 +63,3 @@ Tùy chỉnh thông tin công khai của gian hàng.
 2. Xây dựng trang **Orders** để seller có thể bắt đầu mô phỏng quy trình xử lý đơn hàng.
 3. Làm trang **Dashboard** để hiển thị số liệu thực tế dựa trên Products và Orders đã có.
 4. Làm trang **Profile** và **Withdrawal** sau cùng để hoàn thiện nghiệp vụ.
-
-Bạn muốn chúng ta bắt đầu implement tính năng nào tiếp theo trong danh sách này (ví dụ: Form thêm sản phẩm mới hay Trang danh sách đơn hàng)?
