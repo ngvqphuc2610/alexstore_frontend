@@ -4,6 +4,7 @@ import type { Order, OrderStatus } from '@/types';
 export interface PlaceOrderRequest {
     addressId: string;
     paymentMethod: string;
+    appliedVouchers?: string[];
     items: { productId: string; quantity: number }[];
 }
 

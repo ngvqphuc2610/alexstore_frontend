@@ -15,6 +15,7 @@ import {
     LifeBuoy,
     Users,
     MessageSquare,
+    Tag,
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { useUIStore } from '@/stores/uiStore';
@@ -31,6 +32,7 @@ const navItems = [
     { href: '/seller/dashboard', label: 'Tổng quan', icon: LayoutDashboard },
     { href: '/seller/products', label: 'Sản phẩm của tôi', icon: Package },
     { href: '/seller/orders', label: 'Đơn hàng', icon: ShoppingCart },
+    { href: '/seller/promotions', label: 'Khuyến mãi', icon: Tag },
     { href: '/seller/followers', label: 'Người theo dõi', icon: Users },
     { href: '/seller/notifications', label: 'Thông báo', icon: Bell },
     { href: '/seller/chat', label: 'Tin nhắn', icon: MessageSquare },

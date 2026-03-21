@@ -3,7 +3,7 @@
 import React from 'react';
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
-import { User, MapPin, ShoppingBag, Settings, Bell, Shield, UserPlus } from 'lucide-react';
+import { User, MapPin, ShoppingBag, Settings, Bell, Shield, UserPlus, Ticket } from 'lucide-react';
 import { Card, CardContent } from '@/components/ui/card';
 import { Separator } from '@/components/ui/separator';
 import { useAuthStore } from '@/stores/authStore';
@@ -21,6 +21,7 @@ const sidebarItems: SidebarItem[] = [
     { label: 'Hồ sơ', href: '/admin/profile', icon: User, roles: ['ADMIN'] },
     
     { label: 'Địa chỉ', href: '/profile/addresses', icon: MapPin, roles: ['BUYER'] },
+    { label: 'Kho Voucher', href: '/profile/vouchers', icon: Ticket, roles: ['BUYER'] },
     
     { label: 'Đơn mua', href: '/profile/orders', icon: ShoppingBag, roles: ['BUYER'] },
     { label: 'Đơn bán', href: '/seller/orders', icon: ShoppingBag, roles: ['SELLER'] },

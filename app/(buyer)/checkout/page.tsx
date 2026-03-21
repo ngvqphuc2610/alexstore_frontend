@@ -6,17 +6,19 @@ import { useRouter } from 'next/navigation';
 import {
     ShoppingBag, MapPin, CreditCard, Truck, ShieldCheck,
     ArrowRight, ChevronLeft, Loader2, Wallet, Smartphone,
-    Banknote, CheckCircle2
+    Banknote, CheckCircle2, Ticket, Sparkles, X
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
 import { Separator } from '@/components/ui/separator';
 import { Badge } from '@/components/ui/badge';
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from '@/components/ui/dialog';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { cartService } from '@/services/cart.service';
 import { ordersService } from '@/services/orders.service';
 import { usersService } from '@/services/users.service';
 import { addressService } from '@/services/address.service';
+import { discountService } from '@/services/discount.service';
 import { toast } from 'sonner';
 import type { CartItem } from '@/types';
 import type { Address } from '@/types/address.types';
@@ -62,6 +64,12 @@ export default function CheckoutPage() {
     const queryClient = useQueryClient();
     const [selectedAddressId, setSelectedAddressId] = useState<string>('');
     const [paymentMethod, setPaymentMethod] = useState('COD');
+    const [voucherDialogOpen, setVoucherDialogOpen] = useState(false);
+    
+    // Voucher selection state (IDs of UserVoucher)
+    const [selectedShopVoucher, setSelectedShopVoucher] = useState<string | null>(null);
+    const [selectedPlatformVoucher, setSelectedPlatformVoucher] = useState<string | null>(null);
+    const [selectedFreeshipVoucher, setSelectedFreeshipVoucher] = useState<string | null>(null);
 
     // Fetch cart
     const { data: cart, isLoading: cartLoading } = useQuery({
@@ -81,6 +89,12 @@ export default function CheckoutPage() {
         queryFn: () => addressService.getAll()
     });
 
+    // Fetch user wallet for vouchers
+    const { data: vouchersData = [], isLoading: vouchersLoading } = useQuery({
+        queryKey: ['wallet-vouchers'],
+        queryFn: discountService.getWallet,
+    });
+
     // Pre-select default address
     useEffect(() => {
         if (addresses.length > 0 && !selectedAddressId) {
@@ -98,8 +112,80 @@ export default function CheckoutPage() {
         () => items.reduce((sum, item) => sum + item.product.price * item.quantity, 0),
         [items]
     );
-    const shippingFee = subtotal >= 500000 ? 0 : 30000;
-    const total = subtotal + shippingFee;
+
+    const savedVouchers = Array.isArray(vouchersData) ? vouchersData.filter(v => v.status === 'SAVED') : [];
+    
+    // Helper to calculate exact discount amount of a voucher against a given base price
+    const calculateDiscountAmount = (discount: any, basePrice: number) => {
+        if (!discount) return 0;
+        if (Number(discount.minOrderValue) > basePrice) return 0;
+        
+        let amount = 0;
+        if (discount.type === 'PERCENTAGE') {
+            amount = basePrice * (Number(discount.value) / 100);
+            if (discount.maxDiscountAmount && amount > Number(discount.maxDiscountAmount)) {
+                amount = Number(discount.maxDiscountAmount);
+            }
+        } else if (discount.type === 'FIXED_AMOUNT') {
+            amount = Number(discount.value);
+        } else if (discount.type === 'FREESHIP') {
+            amount = Number(discount.value); // Usually caps the shipping speed
+        }
+        return amount;
+    };
+
+    // Calculate active discounts
+    const activeShopUv = savedVouchers.find(v => v.id === selectedShopVoucher);
+    const activePlatformUv = savedVouchers.find(v => v.id === selectedPlatformVoucher);
+    const activeFreeshipUv = savedVouchers.find(v => v.id === selectedFreeshipVoucher);
+
+    const shopDiscountValue = activeShopUv ? calculateDiscountAmount(activeShopUv.discount, subtotal) : 0;
+    const platformDiscountValue = activePlatformUv ? calculateDiscountAmount(activePlatformUv.discount, Math.max(0, subtotal - shopDiscountValue)) : 0;
+
+    const baseShippingFee = subtotal >= 500000 ? 0 : 30000;
+    const freeshipDiscountValue = activeFreeshipUv && baseShippingFee > 0
+        ? Math.min(baseShippingFee, calculateDiscountAmount(activeFreeshipUv.discount, subtotal)) 
+        : 0;
+
+    const shippingFee = baseShippingFee - freeshipDiscountValue;
+    const total = Math.max(0, subtotal - shopDiscountValue - platformDiscountValue) + shippingFee;
+
+    // Greedy Algorithm for Best Deal
+    const autoApplyBestDeal = () => {
+        let bestShop = null, bestPlatform = null, bestFreeship = null;
+        let maxShopVal = 0, maxPlatformVal = 0, maxFreeshipVal = 0;
+
+        savedVouchers.forEach(uv => {
+            const d = uv.discount;
+            if (Number(d.minOrderValue) > subtotal) return;
+
+            if (d.type === 'FREESHIP') {
+                const val = Math.min(30000, Number(d.value)); // Simplified freeship estimation
+                if (val > maxFreeshipVal) { maxFreeshipVal = val; bestFreeship = uv.id; }
+            } else if (d.scope === 'SHOP') {
+                const val = calculateDiscountAmount(d, subtotal);
+                if (val > maxShopVal) { maxShopVal = val; bestShop = uv.id; }
+            }
+        });
+
+        // Platform is calculated post shop discount
+        const tempSubAfterShop = subtotal - maxShopVal;
+        savedVouchers.forEach(uv => {
+            const d = uv.discount;
+            if (Number(d.minOrderValue) > subtotal || d.scope !== 'PLATFORM' || d.type === 'FREESHIP') return;
+            const val = calculateDiscountAmount(d, tempSubAfterShop);
+            if (val > maxPlatformVal) { maxPlatformVal = val; bestPlatform = uv.id; }
+        });
+
+        setSelectedShopVoucher(bestShop);
+        setSelectedPlatformVoucher(bestPlatform);
+        setSelectedFreeshipVoucher(bestFreeship);
+        toast.info('Đã tự động áp dụng các mã giảm giá tốt nhất!');
+    };
+
+    const getAppliedVoucherIds = () => {
+        return [selectedShopVoucher, selectedPlatformVoucher, selectedFreeshipVoucher].filter(Boolean) as string[];
+    };
 
     // Place order mutation
     const placeOrderMutation = useMutation({
@@ -112,6 +198,7 @@ export default function CheckoutPage() {
             return ordersService.placeOrder({
                 addressId: selectedAddressId,
                 paymentMethod,
+                appliedVouchers: getAppliedVoucherIds(),
                 items: items.map(item => ({
                     productId: item.product.id,
                     quantity: item.quantity,
@@ -150,7 +237,7 @@ export default function CheckoutPage() {
         },
     });
 
-    const isLoading = cartLoading || profileLoading || addressesLoading;
+    const isLoading = cartLoading || profileLoading || addressesLoading || vouchersLoading;
 
     if (isLoading) {
         return (
@@ -379,6 +466,37 @@ export default function CheckoutPage() {
 
                     {/* Right Column - Order Summary */}
                     <div className="w-full lg:w-[380px] shrink-0">
+                        {/* Vouchers Section */}
+                        <Card className="border border-gray-100 shadow-sm mb-6">
+                            <CardContent className="p-6">
+                                <div className="flex justify-between items-center mb-4">
+                                    <h2 className="text-lg font-bold text-gray-900 flex items-center gap-2">
+                                        <Ticket className="h-5 w-5 text-amber-500" /> AlexStore Voucher
+                                    </h2>
+                                </div>
+                                <div className="space-y-2">
+                                    {getAppliedVoucherIds().length > 0 ? (
+                                        <div className="flex flex-col gap-2 mb-4">
+                                            {activeShopUv && <Badge variant="secondary" className="justify-between py-1.5 px-3 bg-amber-50 text-amber-700 border border-amber-200">Shop: {activeShopUv.discount.code} <X className="w-3 h-3 ml-2 cursor-pointer" onClick={() => setSelectedShopVoucher(null)}/></Badge>}
+                                            {activePlatformUv && <Badge variant="secondary" className="justify-between py-1.5 px-3 bg-indigo-50 text-indigo-700 border border-indigo-200">Sàn: {activePlatformUv.discount.code} <X className="w-3 h-3 ml-2 cursor-pointer" onClick={() => setSelectedPlatformVoucher(null)}/></Badge>}
+                                            {activeFreeshipUv && <Badge variant="secondary" className="justify-between py-1.5 px-3 bg-emerald-50 text-emerald-700 border border-emerald-200">Freeship: {activeFreeshipUv.discount.code} <X className="w-3 h-3 ml-2 cursor-pointer" onClick={() => setSelectedFreeshipVoucher(null)}/></Badge>}
+                                        </div>
+                                    ) : (
+                                        <p className="text-sm text-gray-500 mb-4">Chọn hoặc nhập mã khuyến mãi</p>
+                                    )}
+                                    <div className="flex gap-2">
+                                        <Button variant="outline" className="flex-1 border-dashed" onClick={() => setVoucherDialogOpen(true)}>
+                                            <Ticket className="w-4 h-4 mr-2" /> Chọn mã
+                                        </Button>
+                                        <Button className="flex-1 bg-amber-500 hover:bg-amber-600 text-white" onClick={autoApplyBestDeal}>
+                                            <Sparkles className="w-4 h-4 mr-2" /> Tự động
+                                        </Button>
+                                    </div>
+                                </div>
+                            </CardContent>
+                        </Card>
+
+                        {/* Order Summary */}
                         <Card className="border border-gray-100 shadow-sm sticky top-24">
                             <CardContent className="p-6">
                                 <h2 className="text-lg font-bold text-gray-900 mb-5">Tóm tắt đơn hàng</h2>
@@ -386,18 +504,36 @@ export default function CheckoutPage() {
 
                                 <div className="space-y-3 text-sm">
                                     <div className="flex justify-between">
-                                        <span className="text-gray-500">Tạm tính ({items.length} sản phẩm)</span>
+                                        <span className="text-gray-500">Tạm tính ({items.length} sp)</span>
                                         <span className="font-medium text-gray-900">{subtotal.toLocaleString('vi-VN')}đ</span>
                                     </div>
+                                    {shopDiscountValue > 0 && (
+                                        <div className="flex justify-between text-amber-600">
+                                            <span>Giảm giá Shop</span>
+                                            <span className="font-medium">- {shopDiscountValue.toLocaleString('vi-VN')}đ</span>
+                                        </div>
+                                    )}
+                                    {platformDiscountValue > 0 && (
+                                        <div className="flex justify-between text-indigo-600">
+                                            <span>Giảm giá AlexStore</span>
+                                            <span className="font-medium">- {platformDiscountValue.toLocaleString('vi-VN')}đ</span>
+                                        </div>
+                                    )}
                                     <div className="flex justify-between">
                                         <span className="text-gray-500">Phí vận chuyển</span>
-                                        {shippingFee === 0 ? (
+                                        {baseShippingFee === 0 ? (
                                             <Badge className="bg-emerald-50 text-emerald-700 border-emerald-200 text-xs" variant="outline">Miễn phí</Badge>
                                         ) : (
-                                            <span className="font-medium text-gray-900">{shippingFee.toLocaleString('vi-VN')}đ</span>
+                                            <span className="font-medium text-gray-900">{baseShippingFee.toLocaleString('vi-VN')}đ</span>
                                         )}
                                     </div>
-                                    <div className="flex justify-between items-center">
+                                    {freeshipDiscountValue > 0 && (
+                                        <div className="flex justify-between text-emerald-600">
+                                            <span>Hỗ trợ vận chuyển</span>
+                                            <span className="font-medium">- {freeshipDiscountValue.toLocaleString('vi-VN')}đ</span>
+                                        </div>
+                                    )}
+                                    <div className="flex justify-between items-center pt-2">
                                         <span className="text-gray-500">Thanh toán</span>
                                         <Badge variant="outline" className="text-xs">
                                             {PAYMENT_METHODS.find(m => m.id === paymentMethod)?.name}
@@ -447,6 +583,63 @@ export default function CheckoutPage() {
                     </div>
                 </div>
             </main>
+
+            {/* Voucher Selection Dialog */}
+            <Dialog open={voucherDialogOpen} onOpenChange={setVoucherDialogOpen}>
+                <DialogContent className="max-w-xl h-[80vh] flex flex-col p-0">
+                    <DialogHeader className="p-6 pb-2">
+                        <DialogTitle>Chọn AlexStore Voucher</DialogTitle>
+                    </DialogHeader>
+                    <div className="flex-1 overflow-y-auto px-6 py-2 pb-6 space-y-4">
+                        {savedVouchers.map((uv: any) => {
+                            const d = uv.discount;
+                            const isEligible = Number(d.minOrderValue) <= subtotal;
+                            const isSelected = selectedShopVoucher === uv.id || selectedPlatformVoucher === uv.id || selectedFreeshipVoucher === uv.id;
+                            
+                            return (
+                                <div 
+                                    key={uv.id} 
+                                    className={`flex border rounded-xl overflow-hidden shadow-sm relative cursor-pointer transition-all ${
+                                        !isEligible ? 'opacity-50 grayscale bg-gray-50' : 
+                                        isSelected ? 'ring-2 ring-primary border-primary bg-primary/5' : 'hover:border-primary/50'
+                                    }`}
+                                    onClick={() => {
+                                        if (!isEligible) return;
+                                        if (d.type === 'FREESHIP') {
+                                            setSelectedFreeshipVoucher(isSelected ? null : uv.id);
+                                        } else if (d.scope === 'SHOP') {
+                                            setSelectedShopVoucher(isSelected ? null : uv.id);
+                                        } else {
+                                            setSelectedPlatformVoucher(isSelected ? null : uv.id);
+                                        }
+                                    }}
+                                >
+                                    <div className={`w-24 shrink-0 flex flex-col justify-center items-center text-white p-3 border-r-2 border-dashed ${d.scope === 'PLATFORM' ? 'bg-indigo-500' : 'bg-amber-500'}`}>
+                                        <span className="font-bold text-center text-sm">
+                                            {d.type === 'PERCENTAGE' ? `Giảm ${d.value}%` : d.type === 'FREESHIP' ? 'Free\nShip' : `Giảm ${Number(d.value).toLocaleString('vi-VN')}đ`}
+                                        </span>
+                                    </div>
+                                    <div className="flex-1 p-3 flex flex-col justify-center">
+                                        <div className="flex justify-between items-start">
+                                            <h3 className="font-semibold text-gray-900 text-sm">{d.name}</h3>
+                                            <div className="shrink-0 h-5 w-5 rounded-full border-2 flex items-center justify-center">
+                                                {isSelected && <div className="h-2.5 w-2.5 rounded-full bg-primary" />}
+                                            </div>
+                                        </div>
+                                        <p className="text-xs text-gray-500 mt-1">Đơn tối thiểu {Number(d.minOrderValue).toLocaleString('vi-VN')}đ</p>
+                                        {!isEligible && (
+                                            <p className="text-xs text-red-500 mt-1 font-medium">Mua thêm {(Number(d.minOrderValue) - subtotal).toLocaleString('vi-VN')}đ để sử dụng</p>
+                                        )}
+                                    </div>
+                                </div>
+                            )
+                        })}
+                    </div>
+                    <div className="p-6 border-t bg-gray-50 shrink-0">
+                        <Button className="w-full" onClick={() => setVoucherDialogOpen(false)}>Xác nhận</Button>
+                    </div>
+                </DialogContent>
+            </Dialog>
         </>
     );
 }
