@@ -12,6 +12,7 @@ import { Separator } from '@/components/ui/separator';
 import { Badge } from '@/components/ui/badge';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { cartService } from '@/services/cart.service';
+import { discountService } from '@/services/discount.service';
 import { toast } from 'sonner';
 import type { CartItem } from '@/types';
 
@@ -27,6 +28,11 @@ export default function CartPage() {
     const { data: cart, isLoading, isError } = useQuery({
         queryKey: ['cart'],
         queryFn: cartService.getCart,
+    });
+
+    const { data: vouchers = [] } = useQuery({
+        queryKey: ['wallet-vouchers'],
+        queryFn: discountService.getWallet,
     });
 
     const updateMutation = useMutation({
@@ -51,6 +57,13 @@ export default function CartPage() {
     const subtotal = items.reduce((sum, item) => sum + item.product.price * item.quantity, 0);
     const shippingFee = subtotal >= 500000 ? 0 : 30000;
     const total = subtotal + shippingFee;
+
+    // Smart Hint Logic: Find largest saved voucher user can ALMOST use
+    const savedVouchers = Array.isArray(vouchers) ? vouchers.filter(v => v.status === 'SAVED').map(v => v.discount) : [];
+    const almostEligibleVouchers = savedVouchers
+        .filter(d => d && Number(d.minOrderValue) > subtotal && Number(d.minOrderValue) - subtotal <= 500000)
+        .sort((a, b) => (Number(a.minOrderValue) - subtotal) - (Number(b.minOrderValue) - subtotal));
+    const smartHintVoucher = almostEligibleVouchers[0];
 
     const handleQuantityChange = (item: CartItem, delta: number) => {
         const newQty = item.quantity + delta;
@@ -204,6 +217,23 @@ export default function CartPage() {
 
                         {/* Order Summary Sidebar */}
                         <div className="w-full lg:w-[380px] shrink-0 space-y-6">
+                            
+                            {smartHintVoucher && (
+                                <Card className="border border-amber-200 bg-amber-50 shadow-sm">
+                                    <CardContent className="p-4 flex gap-3">
+                                        <div className="shrink-0 pt-0.5">
+                                            <Tag className="w-5 h-5 text-amber-500" />
+                                        </div>
+                                        <div>
+                                            <p className="text-sm font-semibold text-amber-900 leading-tight mb-1">Cơ hội giảm giá!</p>
+                                            <p className="text-xs text-amber-800">
+                                                Mua thêm <span className="font-bold text-amber-600">{(Number(smartHintVoucher.minOrderValue) - subtotal).toLocaleString('vi-VN')}đ</span> để sử dụng mã <span className="font-bold">"{smartHintVoucher.name}"</span> (Giảm {smartHintVoucher.type === 'PERCENTAGE' ? `${smartHintVoucher.value}%` : `${Number(smartHintVoucher.value).toLocaleString('vi-VN')}đ`})
+                                            </p>
+                                        </div>
+                                    </CardContent>
+                                </Card>
+                            )}
+
                             <Card className="border border-gray-100 shadow-sm sticky top-24">
                                 <CardContent className="p-6">
                                     <h2 className="text-lg font-bold text-gray-900 mb-5">Tóm tắt đơn hàng</h2>

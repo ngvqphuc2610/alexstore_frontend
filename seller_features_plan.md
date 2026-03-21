@@ -56,6 +56,15 @@ Kênh tương tác trực tiếp để chốt đơn và chăm sóc khách hàng.
 - [x] **Push Notifications:** Nhận email/thông báo khi có khách nhắn tin mới (Offline fallback via System Notification).
 - [x] **Chat History:** Lưu trữ và tìm kiếm lại các cuộc hội thoại cũ (Cursor-based pagination).
 
+## 8. Quản lý Khuyến mãi Shop (Marketing Center) - Ưu tiên: Cao *(Đã hoàn thành)*
+Cung cấp công cụ chạy chiến dịch kích cầu mua sắm.
+
+- [x] **Tạo Shop Voucher hiển thị (Public):** Tạo mã theo % hoặc số tiền. Đặt điều kiện đơn tối thiểu, mức giảm tối đa, giới hạn lượt dùng hệ thống.
+- [x] **Thêm quy định Phạm vi Áp dụng:** Chỉ cho phép giảm với một mục cụ thể hoặc sản phẩm cụ thể thông qua bảng DiscountScope.
+- [x] **Tạo Flash Sale / Giảm giá trực tiếp:** Chỉnh sửa giá gốc (gạch ngang) sang giá khuyến mãi và hiển thị badge động (dynamic badging % off).
+- [x] **Tạo Voucher Ẩn (Private Voucher):** Chỉ cấp thông qua Chat cho khách hàng để giải quyết khiếu nại hoặc tri ân khách cũ, không hiển thị trên giao diện chung của Shop.
+- [x] **Chống Giá Ảo:** Không cho phép hoặc cảnh báo nếu vừa nâng giá gốc lên rồi tạo Flash Sale giảm sâu nhằm tạo khuyến mãi giả mạo (Backend validation).
+
 ---
 
 ### 🚀 Lộ trình Đề xuất để code tiếp:

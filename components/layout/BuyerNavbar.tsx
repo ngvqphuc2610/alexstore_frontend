@@ -27,6 +27,7 @@ import { formatDate } from '@/lib/constants';
 import { NotificationDropdown } from './NotificationDropdown';
 
 const NAV_CATEGORIES = [
+    { label: 'Khuyến Mãi (Mã giảm giá)', href: '/vouchers' },
     { label: 'Flash Deals', href: '/products?sort=discount' },
     { label: 'All Shops', href: '/shops' },
 ];

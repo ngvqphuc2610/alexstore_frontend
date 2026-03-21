@@ -16,6 +16,7 @@ import { useRecentlyViewedStore } from '@/stores/recentlyViewedStore';
 import { useAuthStore } from '@/stores/authStore';
 import { favoritesService } from '@/services/favorites.service';
 import { toast } from 'sonner';
+import { VoucherClaimWidget } from '@/components/shared/VoucherClaimWidget';
 
 const getImageUrl = (url: string) => {
     if (!url) return '';
@@ -80,7 +81,7 @@ export default function ProductDetailPage({ params }: { params: Promise<{ id: st
             addItem({
                 id: product.id,
                 name: product.name,
-                price: product.price,
+                price: Number(product.price),
                 imageUrl: product.images?.[0]?.imageUrl || null,
                 categoryId: product.categoryId,
             });
@@ -119,6 +120,7 @@ export default function ProductDetailPage({ params }: { params: Promise<{ id: st
     const {
         name = 'Tên không có sẵn',
         price = 0,
+        originalPrice,
         avgRating = 0,
         reviewCount = 0,
         description = 'Đang cập nhật...',
@@ -129,8 +131,10 @@ export default function ProductDetailPage({ params }: { params: Promise<{ id: st
         reviews = [],
     } = product as any;
 
-    const displayOriginalPrice = Number(price) * 1.2;
-    const discountPercent = Math.round(((displayOriginalPrice - Number(price)) / displayOriginalPrice) * 100);
+    const displayOriginalPrice = originalPrice ? Number(originalPrice) : null;
+    const discountPercent = displayOriginalPrice && displayOriginalPrice > Number(price)
+        ? Math.round(((displayOriginalPrice - Number(price)) / displayOriginalPrice) * 100)
+        : 0;
 
     const renderStars = (rating: number, size: string = 'h-4 w-4') => {
         return (
@@ -243,13 +247,14 @@ export default function ProductDetailPage({ params }: { params: Promise<{ id: st
                             <div className="bg-gradient-to-r from-gray-50 to-orange-50/30 p-6 rounded-xl mb-6">
                                 <div className="flex items-end gap-3 mb-1">
                                     <span className="text-3xl font-bold text-primary">{Number(price).toLocaleString('vi-VN')}đ</span>
-                                    {displayOriginalPrice > Number(price) && (
+                                    {displayOriginalPrice && displayOriginalPrice > Number(price) && (
                                         <span className="text-lg text-gray-400 line-through pb-0.5">{displayOriginalPrice.toLocaleString('vi-VN')}đ</span>
                                     )}
                                     {discountPercent > 0 && (
                                         <Badge className="bg-red-500 hover:bg-red-500 text-white text-xs mb-1">-{discountPercent}%</Badge>
                                     )}
                                 </div>
+                                <VoucherClaimWidget shopId={seller?.id} />
                             </div>
 
                             {/* Stock & Quantity */}

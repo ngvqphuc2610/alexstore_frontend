@@ -21,7 +21,8 @@ import {
     PieChart,
     LineChart,
     Box,
-    Bell
+    Bell,
+    Tag
 } from 'lucide-react';
 
 const analyticsItems = [
@@ -38,6 +39,7 @@ const managementItems = [
     { href: '/admin/categories', label: 'Danh mục', icon: FolderTree },
     { href: '/admin/orders', label: 'Đơn hàng', icon: ShoppingCart },
     { href: '/admin/reviews', label: 'Đánh giá', icon: Star },
+    { href: '/admin/discounts', label: 'Khuyến mãi', icon: Tag },
     { href: '/admin/support', label: 'Hỗ trợ & Khiếu nại', icon: LifeBuoy },
     { href: '/admin/notifications', label: 'Thông báo', icon: Bell },
 ];

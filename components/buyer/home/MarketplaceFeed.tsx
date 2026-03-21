@@ -31,6 +31,11 @@ function getProductImage(product: Product): string {
 
 function ProductCard({ product, index }: { product: Product; index: number }) {
     const imageSrc = getProductImage(product);
+    const originalPrice = product.originalPrice ? Number(product.originalPrice) : null;
+    const currentPrice = Number(product.price);
+    const discount = originalPrice && originalPrice > currentPrice 
+        ? Math.round(((originalPrice - currentPrice) / originalPrice) * 100) 
+        : 0;
 
     return (
         <motion.article
@@ -54,6 +59,12 @@ function ProductCard({ product, index }: { product: Product; index: number }) {
                             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1} d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z" />
                         </svg>
                     </div>
+                )}
+
+                {discount > 0 && (
+                    <span className="absolute top-2 left-2 z-10 bg-red-500 text-white text-[10px] font-bold px-2 py-0.5 rounded shadow-sm">
+                        -{discount}%
+                    </span>
                 )}
 
                 {/* Quick overlay */}
@@ -93,9 +104,16 @@ function ProductCard({ product, index }: { product: Product; index: number }) {
 
                 {/* Price & seller name */}
                 <div className="mt-2">
-                    <p className="font-bold text-primary text-sm">
-                        {Number(product.price).toLocaleString('vi-VN')}đ
-                    </p>
+                    <div className="flex items-baseline gap-1.5 flex-wrap">
+                        <span className="font-bold text-primary text-sm leading-none">
+                            {currentPrice.toLocaleString('vi-VN')}đ
+                        </span>
+                        {originalPrice && originalPrice > currentPrice && (
+                            <span className="text-[10px] text-gray-400 line-through leading-none">
+                                {originalPrice.toLocaleString('vi-VN')}đ
+                            </span>
+                        )}
+                    </div>
                     {product.seller && (
                         <p className="text-[10px] text-gray-400 mt-0.5 truncate">
                             {product.seller.username}

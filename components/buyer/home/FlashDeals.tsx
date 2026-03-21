@@ -58,8 +58,11 @@ function FlashProductCard({ product }: { product: Product }) {
     const [wishlisted, setWishlisted] = useState(false);
     const imageSrc = getProductImage(product);
 
-    // Simulate a random discount badge between 10–60%
-    const discount = ((product.id.charCodeAt(0) % 6) + 1) * 10;
+    const originalPrice = product.originalPrice ? Number(product.originalPrice) : null;
+    const currentPrice = Number(product.price);
+    const discount = originalPrice && originalPrice > currentPrice 
+        ? Math.round(((originalPrice - currentPrice) / originalPrice) * 100) 
+        : 0;
 
     return (
         <motion.div
@@ -68,9 +71,11 @@ function FlashProductCard({ product }: { product: Product }) {
             className="relative group flex-shrink-0 w-48 bg-white border border-gray-100 rounded-xl overflow-hidden shadow-sm hover:shadow-md transition-shadow"
         >
             {/* Discount badge */}
-            <span className="absolute top-2 left-2 z-10 bg-red-500 text-white text-[10px] font-bold px-2 py-0.5 rounded">
-                -{discount}%
-            </span>
+            {discount > 0 && (
+                <span className="absolute top-2 left-2 z-10 bg-red-500 text-white text-[10px] font-bold px-2 py-0.5 rounded">
+                    -{discount}%
+                </span>
+            )}
 
             {/* Wishlist button */}
             <button
@@ -105,10 +110,15 @@ function FlashProductCard({ product }: { product: Product }) {
                 <Link href={`/products/${product.id}`} className="text-xs font-medium text-gray-800 line-clamp-2 hover:text-primary transition-colors leading-snug">
                     {product.name}
                 </Link>
-                <div className="mt-2 flex items-center gap-2">
-                    <span className="font-bold text-primary text-sm">
-                        {Number(product.price).toLocaleString('vi-VN')}đ
+                <div className="mt-2 flex items-baseline gap-1.5 flex-wrap">
+                    <span className="font-bold text-primary text-sm leading-none">
+                        {currentPrice.toLocaleString('vi-VN')}đ
                     </span>
+                    {originalPrice && originalPrice > currentPrice && (
+                        <span className="text-[10px] text-gray-400 line-through leading-none">
+                            {originalPrice.toLocaleString('vi-VN')}đ
+                        </span>
+                    )}
                 </div>
             </div>
         </motion.div>

@@ -8,6 +8,10 @@ import { useChatContextStore } from '@/stores/chatContextStore';
 import { useChatSocket } from '@/providers/ChatProvider';
 import { useAuthStore } from '@/stores/authStore';
 import { chatService, type Conversation, type ChatMessage } from '@/services/chat.service';
+import { discountService } from '@/services/discount.service';
+import { useQuery } from '@tanstack/react-query';
+import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
+import { Tag, Ticket } from 'lucide-react';
 
 export function ChatWidget() {
   const { user } = useAuthStore();
@@ -38,6 +42,13 @@ export function ChatWidget() {
   const [isLocalTyping, setIsLocalTyping] = useState(false);
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const typingTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+
+  // Fetch private vouchers if user is seller
+  const { data: sellerVouchers = [] } = useQuery({
+    queryKey: ['seller-vouchers', user?.id],
+    queryFn: discountService.getShopVouchers,
+    enabled: user?.role === 'SELLER',
+  });
 
   // Load conversations
   useEffect(() => {
@@ -321,7 +332,23 @@ export function ChatWidget() {
                           )}
                         </div>
                       )}
-                      <p className="whitespace-pre-wrap break-words">{msg.content}</p>
+                      
+                      {/* Text / Voucher render */}
+                      {msg.content.startsWith('[VOUCHER]') ? (
+                        <div className="bg-amber-50 dark:bg-amber-900/30 border border-amber-200 dark:border-amber-800 text-amber-900 dark:text-amber-100 p-2 rounded-lg cursor-copy" onClick={() => {
+                          navigator.clipboard.writeText(msg.content.split('Mã: ')[1]?.split('\n')[0] || '');
+                        }} title="Click để copy mã">
+                          <div className="flex items-center gap-1.5 font-bold mb-1 border-b border-amber-200/50 pb-1">
+                            <Ticket className="w-4 h-4"/> <span>Voucher Đặc Biệt</span>
+                          </div>
+                          <p className="whitespace-pre-wrap break-words text-sm mt-1">
+                            {msg.content.replace('[VOUCHER]', '').trim()}
+                          </p>
+                        </div>
+                      ) : (
+                        <p className="whitespace-pre-wrap break-words">{msg.content}</p>
+                      )}
+                      
                       <p
                         className={`text-[10px] mt-1 ${
                           isMe ? 'text-primary-foreground/60' : 'text-muted-foreground'
@@ -383,7 +410,39 @@ export function ChatWidget() {
           )}
 
           {/* Input */}
-          <div className="flex items-center gap-2 px-3 py-2 border-t border-border/50">
+          <div className="flex items-center gap-2 px-3 py-2 border-t border-border/50 bg-background/95">
+            {user?.role === 'SELLER' && (
+              <Popover>
+                <PopoverTrigger asChild>
+                  <Button variant="ghost" size="icon" className="h-9 w-9 shrink-0 text-amber-600 hover:text-amber-700 hover:bg-amber-100 dark:hover:bg-amber-900/40">
+                    <Tag className="w-5 h-5" />
+                  </Button>
+                </PopoverTrigger>
+                <PopoverContent side="top" align="start" className="w-64 p-2" sideOffset={10}>
+                  <div className="flex flex-col gap-1 max-h-[200px] overflow-y-auto custom-scrollbar">
+                    <p className="text-xs font-semibold mb-1 text-muted-foreground px-1">Gửi voucher cho khách</p>
+                    {sellerVouchers.length === 0 ? (
+                      <p className="text-xs px-1 text-muted-foreground">Chưa có mã giảm giá nào.</p>
+                    ) : (
+                      sellerVouchers.map((v: any) => (
+                        <button
+                          key={v.id}
+                          className="flex flex-col text-left px-2 py-1.5 hover:bg-muted rounded text-sm transition-colors border border-transparent hover:border-border"
+                          onClick={() => {
+                            const valStr = v.type === 'PERCENTAGE' ? `${v.value}%` : `${Number(v.value).toLocaleString('vi-VN')}đ`;
+                            setInput(`[VOUCHER]\n🎉 Tặng bạn mã giảm giá: ${valStr}\nMã: ${v.code}\nÁp dụng cho đơn từ ${Number(v.minOrderValue).toLocaleString('vi-VN')}đ`);
+                          }}
+                        >
+                          <span className="font-bold text-amber-700 dark:text-amber-400">{v.code}</span>
+                          <span className="text-xs opacity-80 truncate">{v.name}</span>
+                        </button>
+                      ))
+                    )}
+                  </div>
+                </PopoverContent>
+              </Popover>
+            )}
+            
             <input
               type="text"
               value={input}
